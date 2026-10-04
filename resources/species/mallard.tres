@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_5gmun"]
+
+[resource]
+script = ExtResource("1_5gmun")
+id = &"mallard"
+display_name = "Крижень"
+latin_name = "Anas platyrhynchos"
+description = "Найпоширеніша дика качка. Селезень має смарагдово-зелену голову."
+biome = 2
+hideout = 4
+body_color = Color(0.5411765, 0.47843137, 0.38431373, 1)
+belly_color = Color(0.84705883, 0.8, 0.72156864, 1)
+accent_color = Color(0.9411765, 0.6901961, 0.1882353, 1)
+body_radii = Vector2(11, 8)
+head_color = Color(0.18039216, 0.41568628, 0.22745098, 1)
+ears = 0
+feature = 2
+tail = 1
+neck_length = 0.4
+base_pitch = 1.1

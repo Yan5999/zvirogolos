@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_86r4o"]
+
+[resource]
+script = ExtResource("1_86r4o")
+id = &"snowy_owl"
+display_name = "Сова біла"
+latin_name = "Bubo scandiacus"
+description = "На відміну від більшості сов полює вдень серед тундри."
+biome = 3
+hideout = 3
+body_color = Color(0.95686275, 0.95686275, 0.9411765, 1)
+belly_color = Color(1, 1, 1, 1)
+accent_color = Color(0.9411765, 0.7529412, 0.1882353, 1)
+body_radii = Vector2(10, 11)
+ears = 0
+feature = 2
+tail = 1
+head_scale = 1.3
+base_pitch = 1.05

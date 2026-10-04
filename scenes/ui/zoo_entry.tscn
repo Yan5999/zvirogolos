@@ -1,0 +1,60 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/zoo_entry.gd" id="1_entry"]
+
+[node name="ZooEntry" type="PanelContainer"]
+custom_minimum_size = Vector2(0, 64)
+size_flags_horizontal = 3
+theme_type_variation = &"ZooRow"
+script = ExtResource("1_entry")
+
+[node name="HBox" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Icon" type="Control" parent="HBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(52, 52)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Info" type="VBoxContainer" parent="HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="NameEdit" type="LineEdit" parent="HBox/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+tooltip_text = "Натисніть, щоб перейменувати"
+theme_override_font_sizes/font_size = 18
+flat = true
+
+[node name="MetaLabel" type="Label" parent="HBox/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.78, 0.72, 1)
+theme_override_font_sizes/font_size = 13
+text_overrun_behavior = 3
+
+[node name="PlayButton" type="Button" parent="HBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 40)
+layout_mode = 2
+size_flags_vertical = 4
+text = "Слухати"
+
+[node name="RecordButton" type="Button" parent="HBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 40)
+layout_mode = 2
+size_flags_vertical = 4
+text = "Перезаписати"
+
+[node name="DeleteButton" type="Button" parent="HBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 40)
+layout_mode = 2
+size_flags_vertical = 4
+tooltip_text = "Прибрати із зоопарку: звір знову сховається у схованці"
+text = "Відпустити"

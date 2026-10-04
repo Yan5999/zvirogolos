@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_h2p7v"]
+
+[resource]
+script = ExtResource("1_h2p7v")
+id = &"hedgehog"
+display_name = "Їжак звичайний"
+latin_name = "Erinaceus europaeus"
+description = "Вночі полює на равликів і жуків, а від небезпеки згортається в колючу кулю."
+hideout = 2
+body_color = Color(0.5411765, 0.44705883, 0.34509805, 1)
+belly_color = Color(0.8509804, 0.76862746, 0.64705884, 1)
+accent_color = Color(0.3529412, 0.27450982, 0.1882353, 1)
+body_radii = Vector2(11, 8)
+ear_scale = 0.6
+feature = 4
+head_scale = 0.85
+base_pitch = 1.35

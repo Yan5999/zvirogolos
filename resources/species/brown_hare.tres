@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_evvbs"]
+
+[resource]
+script = ExtResource("1_evvbs")
+id = &"brown_hare"
+display_name = "Заєць сірий"
+latin_name = "Lepus europaeus"
+description = "Розганяється до 70 км/год і різко петляє, тікаючи від лисиці."
+body_color = Color(0.6901961, 0.5411765, 0.36862746, 1)
+belly_color = Color(0.9254902, 0.8627451, 0.7529412, 1)
+accent_color = Color(0.22745098, 0.16470589, 0.101960786, 1)
+body_radii = Vector2(11, 8)
+ears = 3
+tail = 1
+base_pitch = 1.25

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_rr6xt"]
+
+[resource]
+script = ExtResource("1_rr6xt")
+id = &"polar_bear"
+display_name = "Ведмідь білий"
+latin_name = "Ursus maritimus"
+description = "Найбільший наземний хижак. Полює на тюленів на кризі."
+biome = 3
+hideout = 3
+body_color = Color(0.9490196, 0.9372549, 0.89411765, 1)
+belly_color = Color(1, 1, 1, 1)
+accent_color = Color(0.16470589, 0.16470589, 0.16470589, 1)
+body_radii = Vector2(21, 14)
+ear_scale = 0.6
+tail = 1
+base_pitch = 0.7
+wander_speed = 20.0

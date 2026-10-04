@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_1h2lt"]
+
+[resource]
+script = ExtResource("1_1h2lt")
+id = &"fennec"
+display_name = "Фенек"
+latin_name = "Vulpes zerda"
+description = "Найменша лисиця у світі. Величезні вуха охолоджують тіло в спеку."
+biome = 1
+hideout = 2
+body_color = Color(0.9098039, 0.78431374, 0.5647059, 1)
+belly_color = Color(1, 0.9490196, 0.8627451, 1)
+accent_color = Color(0.6901961, 0.5411765, 0.3529412, 1)
+body_radii = Vector2(9, 7)
+ears = 1
+ear_scale = 1.9
+tail = 2
+base_pitch = 1.35

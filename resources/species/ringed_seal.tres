@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_up7vr"]
+
+[resource]
+script = ExtResource("1_up7vr")
+id = &"ringed_seal"
+display_name = "Нерпа"
+latin_name = "Pusa hispida"
+description = "Дихає через лунки в льоду, які сама ж і продряпує."
+biome = 3
+hideout = 3
+body_color = Color(0.47843137, 0.5176471, 0.5647059, 1)
+belly_color = Color(0.72156864, 0.7529412, 0.78431374, 1)
+accent_color = Color(0.22745098, 0.2509804, 0.28235295, 1)
+body_radii = Vector2(17, 8)
+ears = 0
+tail = 4
+wander_speed = 10.0

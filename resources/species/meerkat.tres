@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_1i0xn"]
+
+[resource]
+script = ExtResource("1_1i0xn")
+id = &"meerkat"
+display_name = "Сурикат"
+latin_name = "Suricata suricatta"
+description = "Стоїть стовпчиком і пильнує, поки родина шукає їжу."
+biome = 1
+hideout = 2
+body_color = Color(0.78431374, 0.65882355, 0.47058824, 1)
+belly_color = Color(0.9098039, 0.84705883, 0.72156864, 1)
+accent_color = Color(0.2901961, 0.22745098, 0.16470589, 1)
+body_radii = Vector2(7, 11)
+ear_scale = 0.5
+face_mask = true
+tail = 3
+neck_length = 0.5
+base_pitch = 1.3

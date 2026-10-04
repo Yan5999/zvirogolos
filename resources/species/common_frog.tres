@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_7i02l"]
+
+[resource]
+script = ExtResource("1_7i02l")
+id = &"common_frog"
+display_name = "Жаба трав'яна"
+latin_name = "Rana temporaria"
+description = "Навесні збирається у ставках і кумкає гучним хором."
+biome = 2
+hideout = 4
+body_color = Color(0.41568628, 0.5411765, 0.22745098, 1)
+belly_color = Color(0.84705883, 0.84705883, 0.627451, 1)
+accent_color = Color(0.22745098, 0.2901961, 0.101960786, 1)
+body_radii = Vector2(10, 7)
+ears = 0
+head_scale = 1.1
+base_pitch = 0.9
+wanders = false

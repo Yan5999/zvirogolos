@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_u5i3t"]
+
+[resource]
+script = ExtResource("1_u5i3t")
+id = &"reindeer"
+display_name = "Північний олень"
+latin_name = "Rangifer tarandus"
+description = "Роги мають і самці, і самки. Мігрує на тисячі кілометрів."
+biome = 3
+hideout = 1
+body_color = Color(0.5411765, 0.47843137, 0.41568628, 1)
+belly_color = Color(0.9098039, 0.8784314, 0.83137256, 1)
+accent_color = Color(0.84705883, 0.78431374, 0.65882355, 1)
+body_radii = Vector2(15, 11)
+ears = 1
+feature = 5
+tail = 1
+neck_length = 0.9
+head_scale = 0.85
+base_pitch = 0.85

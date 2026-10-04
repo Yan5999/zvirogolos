@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_tpjt3"]
+
+[resource]
+script = ExtResource("1_tpjt3")
+id = &"red_squirrel"
+display_name = "Білка звичайна"
+latin_name = "Sciurus vulgaris"
+description = "Ховає жолуді й горіхи на зиму — і часто про них забуває, садячи нові дерева."
+body_color = Color(0.7529412, 0.39215687, 0.17254902, 1)
+belly_color = Color(0.95686275, 0.8862745, 0.78431374, 1)
+accent_color = Color(0.5411765, 0.24705882, 0.09411765, 1)
+body_radii = Vector2(8, 7)
+ears = 1
+ear_tufts = true
+tail = 2
+base_pitch = 1.4

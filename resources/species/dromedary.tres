@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_72eu6"]
+
+[resource]
+script = ExtResource("1_72eu6")
+id = &"dromedary"
+display_name = "Верблюд одногорбий"
+latin_name = "Camelus dromedarius"
+description = "Тижнями обходиться без води, а в горбі запасає жир."
+biome = 1
+hideout = 1
+body_color = Color(0.78431374, 0.6039216, 0.36862746, 1)
+belly_color = Color(0.8862745, 0.7529412, 0.5411765, 1)
+accent_color = Color(0.5411765, 0.41568628, 0.22745098, 1)
+body_radii = Vector2(18, 11)
+ears = 1
+ear_scale = 0.5
+feature = 6
+tail = 3
+neck_length = 1.6
+head_scale = 0.8
+base_pitch = 0.75
+wander_speed = 18.0

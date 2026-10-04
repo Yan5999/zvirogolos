@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_uc20y"]
+
+[resource]
+script = ExtResource("1_uc20y")
+id = &"badger"
+display_name = "Борсук"
+latin_name = "Meles meles"
+description = "Риє глибокі нори з багатьма виходами, де живуть цілі покоління."
+hideout = 2
+body_color = Color(0.54901963, 0.54901963, 0.54901963, 1)
+belly_color = Color(0.2901961, 0.2901961, 0.2901961, 1)
+accent_color = Color(0.95686275, 0.95686275, 0.95686275, 1)
+body_radii = Vector2(14, 8)
+head_color = Color(0.9490196, 0.9490196, 0.9490196, 1)
+ear_scale = 0.6
+face_mask = true
+tail = 1
+base_pitch = 0.95

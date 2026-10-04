@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_fopfg"]
+
+[resource]
+script = ExtResource("1_fopfg")
+id = &"walrus"
+display_name = "Морж"
+latin_name = "Odobenus rosmarus"
+description = "Бивнями чіпляється за кригу, щоб вибратися з води."
+biome = 3
+hideout = 1
+body_color = Color(0.65882355, 0.47843137, 0.3529412, 1)
+belly_color = Color(0.78431374, 0.6039216, 0.47843137, 1)
+accent_color = Color(1, 0.972549, 0.9098039, 1)
+body_radii = Vector2(20, 12)
+ears = 0
+feature = 8
+head_scale = 0.9
+base_pitch = 0.65
+wander_speed = 10.0

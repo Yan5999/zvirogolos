@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_qoyrm"]
+
+[resource]
+script = ExtResource("1_qoyrm")
+id = &"emperor_penguin"
+display_name = "Пінгвін імператорський"
+latin_name = "Aptenodytes forsteri"
+description = "Найбільший пінгвін. Тато всю зиму гріє яйце на своїх лапах."
+biome = 3
+hideout = 3
+body_color = Color(0.16470589, 0.18039216, 0.22745098, 1)
+belly_color = Color(0.95686275, 0.95686275, 0.95686275, 1)
+accent_color = Color(0.9411765, 0.627451, 0.1882353, 1)
+body_radii = Vector2(9, 13)
+ears = 0
+feature = 2
+head_scale = 0.9

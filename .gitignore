@@ -1,0 +1,17 @@
+# Godot 4+
+.godot/
+/android/
+*.translation
+# Export / build output
+/build/
+*.exe
+*.pck
+*.x86_64
+*.zip
+export_credentials.cfg
+# Steam
+steam_appid.txt
+/steam_sdk/
+# OS
+.DS_Store
+Thumbs.db

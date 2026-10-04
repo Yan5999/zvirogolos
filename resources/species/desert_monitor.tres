@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_q7ru6"]
+
+[resource]
+script = ExtResource("1_q7ru6")
+id = &"desert_monitor"
+display_name = "Варан сірий"
+latin_name = "Varanus griseus"
+description = "Найбільша ящірка пустель Середньої Азії. Бігає швидше за людину."
+biome = 1
+hideout = 1
+body_color = Color(0.5411765, 0.5411765, 0.41568628, 1)
+belly_color = Color(0.72156864, 0.6901961, 0.5647059, 1)
+accent_color = Color(0.3529412, 0.3529412, 0.22745098, 1)
+body_radii = Vector2(16, 6)
+ears = 0
+tail = 3
+head_scale = 0.9
+base_pitch = 0.9

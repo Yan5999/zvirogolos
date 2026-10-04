@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_cg51f"]
+
+[resource]
+script = ExtResource("1_cg51f")
+id = &"lynx"
+display_name = "Рись"
+latin_name = "Lynx lynx"
+description = "Китиці на вухах і широкі лапи, що не провалюються в сніг."
+biome = 3
+hideout = 1
+body_color = Color(0.78431374, 0.627451, 0.47843137, 1)
+belly_color = Color(0.9411765, 0.8784314, 0.78431374, 1)
+accent_color = Color(0.16470589, 0.16470589, 0.16470589, 1)
+body_radii = Vector2(14, 10)
+ears = 1
+ear_tufts = true
+tail = 1
+base_pitch = 0.95

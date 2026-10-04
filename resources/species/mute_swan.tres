@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_kc66m"]
+
+[resource]
+script = ExtResource("1_kc66m")
+id = &"mute_swan"
+display_name = "Лебідь-шипун"
+latin_name = "Cygnus olor"
+description = "Коли сердиться — шипить. Пари лебедів часто разом усе життя."
+biome = 2
+hideout = 4
+body_color = Color(0.95686275, 0.95686275, 0.95686275, 1)
+belly_color = Color(1, 1, 1, 1)
+accent_color = Color(0.9098039, 0.41568628, 0.16470589, 1)
+body_radii = Vector2(14, 9)
+ears = 0
+feature = 2
+tail = 1
+neck_length = 1.8
+head_scale = 0.8
+base_pitch = 0.9

@@ -1,0 +1,89 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/map_screen.gd" id="1_map"]
+[ext_resource type="Script" path="res://scripts/ui/map_view.gd" id="2_view"]
+
+[node name="MapScreen" type="CanvasLayer"]
+process_mode = 3
+layer = 12
+script = ExtResource("1_map")
+
+[node name="Dim" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Center" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="Center"]
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Center/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="HBox" type="HBoxContainer" parent="Center/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="MapView" type="Control" parent="Center/Panel/Margin/HBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(600, 600)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("2_view")
+show_names = true
+marker_scale = 1.5
+
+[node name="Side" type="VBoxContainer" parent="Center/Panel/Margin/HBox"]
+custom_minimum_size = Vector2(230, 0)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Center/Panel/Margin/HBox/Side"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Мапа"
+
+[node name="StatsLabel" type="Label" parent="Center/Panel/Margin/HBox/Side"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+
+[node name="Legend" type="Label" parent="Center/Panel/Margin/HBox/Side"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.8, 0.75, 1)
+theme_override_font_sizes/font_size = 14
+text = "Помаранчева стрілка — ви.
+Кружечок — знайдений звір.
+Кружечок із цяткою — голос записано.
+
+Незнайдені звірі ховаються в кущах, норах, під камінням, у заметах та очереті."
+autowrap_mode = 3
+
+[node name="Spacer" type="Control" parent="Center/Panel/Margin/HBox/Side"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Hint" type="Label" parent="Center/Panel/Margin/HBox/Side"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.68, 0.62, 1)
+theme_override_font_sizes/font_size = 13
+text = "M / Esc — закрити"
+
+[node name="CloseButton" type="Button" parent="Center/Panel/Margin/HBox/Side"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Закрити"

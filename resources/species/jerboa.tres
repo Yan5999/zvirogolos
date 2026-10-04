@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_yx3o3"]
+
+[resource]
+script = ExtResource("1_yx3o3")
+id = &"jerboa"
+display_name = "Тушканчик великий"
+latin_name = "Allactaga major"
+description = "Стрибає на довгих задніх лапах, наче маленький кенгуру."
+biome = 1
+hideout = 2
+body_color = Color(0.83137256, 0.6901961, 0.5019608, 1)
+belly_color = Color(0.9647059, 0.91764706, 0.83137256, 1)
+accent_color = Color(0.16470589, 0.16470589, 0.16470589, 1)
+body_radii = Vector2(7, 7)
+ears = 3
+tail = 3
+head_scale = 1.1
+base_pitch = 1.5

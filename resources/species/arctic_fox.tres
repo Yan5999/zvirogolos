@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_do5wh"]
+
+[resource]
+script = ExtResource("1_do5wh")
+id = &"arctic_fox"
+display_name = "Песець"
+latin_name = "Vulpes lagopus"
+description = "Узимку білий, улітку бурий. Витримує мороз до −50 °C."
+biome = 3
+hideout = 3
+body_color = Color(0.95686275, 0.9647059, 0.972549, 1)
+belly_color = Color(1, 1, 1, 1)
+accent_color = Color(0.22745098, 0.22745098, 0.22745098, 1)
+body_radii = Vector2(12, 8)
+ears = 1
+ear_scale = 0.8
+tail = 2
+base_pitch = 1.2

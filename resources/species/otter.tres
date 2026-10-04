@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_cu3no"]
+
+[resource]
+script = ExtResource("1_cu3no")
+id = &"otter"
+display_name = "Видра річкова"
+latin_name = "Lutra lutra"
+description = "Чудово плаває та пірнає, а граючись, катається з берега."
+biome = 2
+body_color = Color(0.41568628, 0.2901961, 0.19607843, 1)
+belly_color = Color(0.78431374, 0.65882355, 0.53333336, 1)
+accent_color = Color(0.22745098, 0.15686275, 0.09411765, 1)
+body_radii = Vector2(16, 7)
+ear_scale = 0.5
+tail = 3
+base_pitch = 1.1

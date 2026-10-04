@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_fcctf"]
+
+[resource]
+script = ExtResource("1_fcctf")
+id = &"beaver"
+display_name = "Бобер європейський"
+latin_name = "Castor fiber"
+description = "Будує греблі з гілок і може гризти дерево цілу ніч."
+biome = 2
+hideout = 2
+body_color = Color(0.47843137, 0.32156864, 0.19607843, 1)
+belly_color = Color(0.65882355, 0.5019608, 0.3529412, 1)
+accent_color = Color(0.22745098, 0.22745098, 0.22745098, 1)
+body_radii = Vector2(15, 10)
+ear_scale = 0.5
+tail = 4
+base_pitch = 0.85

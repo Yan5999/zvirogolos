@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_c13iq"]
+
+[resource]
+script = ExtResource("1_c13iq")
+id = &"tawny_owl"
+display_name = "Сова сіра"
+latin_name = "Strix aluco"
+description = "Літає зовсім беззвучно і може повернути голову майже назад."
+body_color = Color(0.5411765, 0.43137255, 0.32156864, 1)
+belly_color = Color(0.84705883, 0.76862746, 0.6431373, 1)
+accent_color = Color(0.8784314, 0.627451, 0.1882353, 1)
+body_radii = Vector2(9, 10)
+ears = 0
+feature = 2
+tail = 1
+head_scale = 1.3

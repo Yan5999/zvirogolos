@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SpeciesData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/species_data.gd" id="1_7i5hk"]
+
+[resource]
+script = ExtResource("1_7i5hk")
+id = &"brown_bear"
+display_name = "Ведмідь бурий"
+latin_name = "Ursus arctos"
+description = "Найбільший хижак наших лісів. Узимку спить у барлозі."
+hideout = 1
+body_color = Color(0.41960785, 0.2901961, 0.18039216, 1)
+belly_color = Color(0.5411765, 0.41568628, 0.28235295, 1)
+accent_color = Color(0.22745098, 0.15686275, 0.09411765, 1)
+body_radii = Vector2(20, 14)
+ear_scale = 0.7
+tail = 1
+base_pitch = 0.7
+wander_speed = 20.0
