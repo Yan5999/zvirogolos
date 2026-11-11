@@ -6,6 +6,10 @@ const MAIN_MENU_SCENE: String = "res://scenes/main_menu/main_menu.tscn"
 const AUTOSAVE_INTERVAL: float = 15.0
 const INTERACT_DISTANCE: float = 90.0
 const ANIMAL_SCENE: PackedScene = preload("res://scenes/animal/animal.tscn")
+const INTRO_TITLE: String = "Ліс замовк"
+const INTRO_TEXT: String = "Колись цей край був сповнений голосів. Але звірі злякалися тиші, сховалися по кущах, норах і кучугурах — і забули, як звучать.\n\nЗнайди їх, дай кожному ім'я та подаруй голос. Хтось виходить лише вдень, хтось — тільки вночі: прислухайся до шелесту.\n\nWASD — йти, Shift — бігти, E — голос звіра, Tab — зоопарк, M — мапа, N — чекати до світанку/сутінків."
+const FINALE_TITLE: String = "Край знову співає"
+const FINALE_TEXT: String = "Усі %d звірів знайшлися. Послухай — це їхній хор, і кожен голос у ньому подарував ти.\n\nБагато з цих видів у природі потребують захисту: їхні статуси з Червоного списку МСОП є в зоопарку. Голоси можна перезаписувати, а з головного меню — почати у новому світі."
 
 @onready var ground: TileMapLayer = $Ground
 @onready var decor_layer: TileMapLayer = $Decor
@@ -22,6 +26,8 @@ var _autosave_timer: float = 0.0
 var _hint_timer: float = 0.0
 var _default_hint: String = ""
 var _reopen_zoo: bool = false
+var day_night: DayNight
+var story: StoryPanel
 
 
 func _ready() -> void:
@@ -47,6 +53,33 @@ func _ready() -> void:
 	map_screen.map_view.player = player
 	GameState.progress_changed.connect(_on_progress_changed)
 	_default_hint = hud.hint_label.text
+	day_night = DayNight.new()
+	add_child(day_night)
+	day_night.attach_lantern(player)
+	story = StoryPanel.new()
+	add_child(story)
+	GameState.night_changed.connect(_on_night_changed)
+	if not GameState.intro_seen:
+		_show_intro.call_deferred()
+
+
+func _show_intro() -> void:
+	GameState.intro_seen = true
+	story.open(INTRO_TITLE, INTRO_TEXT, "Вирушити")
+
+
+func _show_finale() -> void:
+	GameState.finale_seen = true
+	_store_and_save()
+	story.open(FINALE_TITLE, FINALE_TEXT % GameState.total(), "Слухати далі")
+	AudioManager.play_chorus(GameState.chorus_voices())
+
+
+func _on_night_changed(night: bool) -> void:
+	if night:
+		hud.show_toast("Настала ніч — прокидаються нічні звірі", 3.0)
+	else:
+		hud.show_toast("Світанок — денні звірі виходять зі схованок", 3.0)
 
 
 func _spawn_animals() -> void:
@@ -105,6 +138,36 @@ func _on_record_dialog_closed(id: String, saved: bool) -> void:
 		return
 	if saved:
 		hud.show_toast("%s тепер живе у вашому зоопарку" % GameState.get_record(id).get("name", ""))
+	# Фінал — коли знайдено всіх і діалог останнього звіра закрито.
+	if not GameState.finale_seen and GameState.total() > 0 and GameState.found_count() == GameState.total():
+		_show_finale()
+
+
+## Найближчий схований звір у радіусі шелесту.
+func nearest_hidden_animal() -> Animal:
+	var best: Animal = null
+	var best_d: float = Animal.RUSTLE_DISTANCE
+	for a: Animal in animals.values():
+		if a.state != Animal.State.HIDDEN:
+			continue
+		var d: float = a.global_position.distance_to(player.global_position)
+		if d < best_d:
+			best_d = d
+			best = a
+	return best
+
+
+func _current_hint() -> String:
+	var near: Animal = nearest_active_animal()
+	if near:
+		return "E — ім'я та голос для «%s»" % near.display_name
+	var hidden: Animal = nearest_hidden_animal()
+	if hidden:
+		if hidden.is_sleeping_hidden():
+			var when: String = "вночі" if hidden.species.active_time == SpeciesData.ActiveTime.NIGHT else "вдень"
+			return "Тут хтось спить... Повернись %s (N — чекати)" % when
+		return "Шелест! Хтось ховається зовсім поруч"
+	return _default_hint
 
 
 ## Ближайшее открытое животное в радиусе взаимодействия.
@@ -151,8 +214,7 @@ func _process(delta: float) -> void:
 	_hint_timer -= delta
 	if _hint_timer <= 0.0:
 		_hint_timer = 0.2
-		var near: Animal = nearest_active_animal()
-		hud.set_hint(("E — ім'я та голос для «%s»" % near.display_name) if near else _default_hint)
+		hud.set_hint(_current_hint())
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -167,16 +229,39 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"open_zoo"):
 		get_viewport().set_input_as_handled()
 		open_zoo()
+	elif event is InputEventKey and event.pressed and not event.echo and (event as InputEventKey).physical_keycode == KEY_N:
+		get_viewport().set_input_as_handled()
+		_wait_for_next_phase()
 	elif event.is_action_pressed(&"pause"):
 		get_viewport().set_input_as_handled()
 		_store_and_save()
 		pause_menu.open()
 
 
+## Перемотка часу до світанку/сутінків із коротким затемненням.
+func _wait_for_next_phase() -> void:
+	if not player.input_enabled:
+		return
+	player.input_enabled = false
+	var fade: ColorRect = ColorRect.new()
+	fade.color = Color(0, 0, 0, 0)
+	fade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(fade)
+	var tw: Tween = create_tween()
+	tw.tween_property(fade, "color:a", 1.0, 0.4)
+	tw.tween_callback(GameState.skip_to_next_phase)
+	tw.tween_interval(0.3)
+	tw.tween_property(fade, "color:a", 0.0, 0.5)
+	tw.tween_callback(fade.queue_free)
+	tw.tween_callback(func() -> void: player.input_enabled = true)
+
+
 func go_to_menu() -> void:
 	_store_and_save()
 	AudioManager.stop_voices()
 	AudioManager.stop_preview()
+	AudioManager.stop_chorus()
 	get_tree().paused = false
 	get_tree().change_scene_to_file(MAIN_MENU_SCENE)
 

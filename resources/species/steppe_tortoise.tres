@@ -20,3 +20,4 @@ tail = 1
 head_scale = 0.7
 base_pitch = 0.8
 wander_speed = 9.0
+status = 2

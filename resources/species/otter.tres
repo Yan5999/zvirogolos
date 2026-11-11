@@ -16,3 +16,4 @@ body_radii = Vector2(16, 7)
 ear_scale = 0.5
 tail = 3
 base_pitch = 1.1
+status = 1

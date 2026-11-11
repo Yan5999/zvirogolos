@@ -7,6 +7,10 @@ extends Node
 const ACH_FIRST_FIND: String = "ACH_FIRST_FIND"
 const ACH_FIRST_VOICE: String = "ACH_FIRST_VOICE"
 const ACH_FULL_ZOO: String = "ACH_FULL_ZOO"
+const ACH_NIGHT_FIND: String = "ACH_NIGHT_FIND"
+const ACH_FULL_CHORUS: String = "ACH_FULL_CHORUS"
+## Усі звірі біому (порядок WorldGen.Biome).
+const ACH_BIOMES: Array[String] = ["ACH_BIOME_FOREST", "ACH_BIOME_DESERT", "ACH_BIOME_LAKE", "ACH_BIOME_SNOW"]
 
 var enabled: bool = false
 var _steam: Object = null
@@ -41,12 +45,25 @@ func unlock(achievement: String) -> void:
 	_steam.call("storeStats")
 
 
-func _on_discovered(_id: String) -> void:
+func _on_discovered(id: String) -> void:
 	unlock(ACH_FIRST_FIND)
 	if GameState.found_count() >= GameState.total():
 		unlock(ACH_FULL_ZOO)
+	var sp: SpeciesData = GameState.species_of(id)
+	if sp and sp.active_time == SpeciesData.ActiveTime.NIGHT:
+		unlock(ACH_NIGHT_FIND)
+	if sp:
+		var bp: Vector2i = GameState.biome_progress(sp.biome)
+		if bp.y > 0 and bp.x >= bp.y:
+			unlock(ACH_BIOMES[sp.biome])
 
 
 func _on_updated(id: String) -> void:
 	if GameState.has_voice(id):
 		unlock(ACH_FIRST_VOICE)
+		var voiced: int = 0
+		for rid: String in GameState.records:
+			if GameState.has_voice(rid):
+				voiced += 1
+		if GameState.total() > 0 and voiced >= GameState.total():
+			unlock(ACH_FULL_CHORUS)

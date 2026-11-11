@@ -50,6 +50,7 @@ func _ready() -> void:
 	screen_notifier.screen_entered.connect(set_process.bind(true))
 	screen_notifier.screen_exited.connect(set_process.bind(false))
 	set_process(false)
+	GameState.night_changed.connect(func(_n: bool) -> void: _update_label())
 
 
 func setup(id: String, sp: SpeciesData, record: Dictionary, player: Player) -> void:
@@ -137,8 +138,18 @@ func _on_reveal_done() -> void:
 	reveal_finished.emit(self)
 
 
+## Звір не спить у цей час доби.
+func is_awake() -> bool:
+	return species == null or species.is_awake(GameState.is_night())
+
+
+## Сховався і зараз спить — вийде лише у свій час доби.
+func is_sleeping_hidden() -> bool:
+	return state == State.HIDDEN and not is_awake()
+
+
 func _on_discover_body_entered(b: Node2D) -> void:
-	if b is Player and state == State.HIDDEN:
+	if b is Player and state == State.HIDDEN and is_awake():
 		reveal()
 
 
@@ -147,8 +158,14 @@ func _process(delta: float) -> void:
 	match state:
 		State.HIDDEN:
 			_rustle()
+			# Гравець чекав поруч, поки звір прокинеться.
+			if _player and is_awake() and discover_area.overlaps_body(_player):
+				reveal()
 		State.ACTIVE:
-			_wander(delta)
+			if is_awake():
+				_wander(delta)
+			else:
+				_moving = false
 			_animate_body()
 			# Игрок остался рядом и бегает вокруг — повторяем голос после кулдауна.
 			if _player_near and _player and _player.is_moving():
@@ -205,6 +222,8 @@ func _rustle() -> void:
 	var d: float = global_position.distance_to(_player.global_position)
 	if d < RUSTLE_DISTANCE:
 		var k: float = 1.0 - d / RUSTLE_DISTANCE
+		if not is_awake():
+			k *= 0.25  # сплячий звір ледь ворушиться
 		hideout.rotation = sin(_time * 22.0) * 0.06 * k * (0.5 + 0.5 * sin(_time * 1.7))
 	elif hideout.rotation != 0.0:
 		hideout.rotation = 0.0
@@ -247,7 +266,7 @@ func _animate_body() -> void:
 
 
 func _update_label() -> void:
-	name_label.text = display_name
+	name_label.text = display_name if is_awake() else display_name + " · спить"
 	name_label.visible = state != State.HIDDEN and not display_name.is_empty()
 	if species:
 		name_label.position.y = -species.body_radii.y * 2.0 - 38.0

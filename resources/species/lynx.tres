@@ -18,3 +18,4 @@ ears = 1
 ear_tufts = true
 tail = 1
 base_pitch = 0.95
+active_time = 2

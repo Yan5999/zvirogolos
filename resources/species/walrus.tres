@@ -19,3 +19,4 @@ feature = 8
 head_scale = 0.9
 base_pitch = 0.65
 wander_speed = 10.0
+status = 2

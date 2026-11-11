@@ -7,12 +7,23 @@ signal animal_updated(id: String)
 signal animal_forgotten(id: String)
 signal progress_changed(found: int, total: int)
 
-const WORLD_SEED: int = 424242
+signal night_changed(is_night: bool)
+
+## Seed першого світу (старі збереження без поля "seed" отримують саме його).
+const DEFAULT_SEED: int = 424242
 const SPECIES_DB: SpeciesDatabase = preload("res://resources/species_db.tres")
 ## Сколько укрытий в каждом биоме (порядок WorldGen.Biome). Сумма = 30.
 const SPOTS_PER_BIOME: Array[int] = [8, 7, 7, 8]
 const MAX_NAME_LENGTH: int = 24
+## Тривалість повної доби в секундах реального часу.
+const DAY_LENGTH: float = 360.0
 
+var world_seed: int = DEFAULT_SEED
+## Час доби 0..1: 0 — північ, 0.5 — полудень.
+var time_of_day: float = 0.35
+var intro_seen: bool = false
+var finale_seen: bool = false
+var _night: bool = false
 var world_gen: WorldGen = WorldGen.new()
 var player_position: Vector2 = Vector2.ZERO
 var species_by_id: Dictionary[StringName, SpeciesData] = {}
@@ -27,12 +38,17 @@ var _voice_cache: Dictionary[String, AudioStreamWAV] = {}
 func _ready() -> void:
 	for s: SpeciesData in SPECIES_DB.species:
 		species_by_id[s.id] = s
-	world_gen.generate(WORLD_SEED)
-	_build_spots()
 	_load()
 
 
+func _generate_world(p_seed: int) -> void:
+	world_seed = p_seed
+	world_gen.generate(world_seed)
+	_build_spots()
+
+
 func _build_spots() -> void:
+	_spot_by_id.clear()
 	spots = world_gen.generate_spots(SPOTS_PER_BIOME)
 	var per_biome_counter: Dictionary[int, int] = {}
 	for spot: Dictionary in spots:
@@ -156,6 +172,16 @@ func get_voice(id: String) -> AudioStreamWAV:
 	return stream
 
 
+## Голоси для «хору» в порядку відкриття: [[stream, pitch], ...].
+func chorus_voices() -> Array:
+	var res: Array = []
+	for rec: Dictionary in sorted_records():
+		var stream: AudioStreamWAV = get_voice(rec["id"])
+		if stream:
+			res.append([stream, species_of(rec["id"]).base_pitch])
+	return res
+
+
 ## Убирает животное из зоопарка: оно снова прячется в укрытии, запись удаляется.
 func forget(id: String) -> void:
 	if not records.has(id):
@@ -173,18 +199,60 @@ func update_animal_position(id: String, pos: Vector2) -> void:
 		records[id]["position"] = [pos.x, pos.y]
 
 
-func reset_progress() -> void:
+## Скидання прогресу. new_world = true — згенерувати новий світ з випадковим seed.
+func reset_progress(new_world: bool = false) -> void:
 	records.clear()
 	_voice_cache.clear()
+	intro_seen = false
+	finale_seen = false
+	time_of_day = 0.35
+	_night = is_night()
+	if new_world:
+		_generate_world(randi() % 1000000)
 	player_position = world_gen.start_position()
 	SaveManager.delete_save()
 	progress_changed.emit(0, total())
+
+
+# --- Час доби ---------------------------------------------------------------
+
+func is_night() -> bool:
+	return time_of_day < 0.22 or time_of_day > 0.78
+
+
+func advance_time(delta: float) -> void:
+	time_of_day = fposmod(time_of_day + delta / DAY_LENGTH, 1.0)
+	var n: bool = is_night()
+	if n != _night:
+		_night = n
+		night_changed.emit(n)
+
+
+## Пропустити час до наступного світанку/сутінків.
+func skip_to_next_phase() -> void:
+	time_of_day = 0.23 if is_night() else 0.79
+	advance_time(0.0)
+
+
+## Скільки видів кожного біому вже знайдено: [found, total] по біомах.
+func biome_progress(biome: int) -> Vector2i:
+	var res: Vector2i = Vector2i.ZERO
+	for spot: Dictionary in spots:
+		if spot["biome"] == biome:
+			res.y += 1
+			if records.has(spot["id"]):
+				res.x += 1
+	return res
 
 
 # --- Сохранение -------------------------------------------------------------
 
 func save() -> void:
 	SaveManager.save_game({
+		"seed": world_seed,
+		"time": time_of_day,
+		"intro_seen": intro_seen,
+		"finale_seen": finale_seen,
 		"player": [player_position.x, player_position.y],
 		"animals": records.values(),
 	})
@@ -192,6 +260,11 @@ func save() -> void:
 
 func _load() -> void:
 	var data: Dictionary = SaveManager.load_game()
+	_generate_world(int(data.get("seed", DEFAULT_SEED)))
+	time_of_day = fposmod(float(data.get("time", 0.35)), 1.0)
+	_night = is_night()
+	intro_seen = bool(data.get("intro_seen", not (data.get("animals", []) as Array).is_empty()))
+	finale_seen = bool(data.get("finale_seen", false))
 	player_position = world_gen.start_position()
 	if data.has("player"):
 		var p: Array = data["player"]

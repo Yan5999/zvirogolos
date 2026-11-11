@@ -30,6 +30,7 @@ func frames(n: int) -> void:
 
 func _run() -> void:
 	GameState.reset_progress()
+	GameState.intro_seen = true
 	var t0: int = Time.get_ticks_msec()
 	var world: World = WORLD_SCENE.instantiate() as World
 	add_child(world)
@@ -55,6 +56,7 @@ func _run() -> void:
 ## Расширяется на следующих этапах.
 func _stage_checks(world: World) -> void:
 	GameState.reset_progress()
+	GameState.intro_seen = true
 	check(GameState.total() == 30, "30 spots generated (got %d)" % GameState.total())
 	check(world.animals.size() == GameState.total(), "animal per spot")
 	var biomes: Dictionary = {}
@@ -187,6 +189,9 @@ func _stage4_checks(world: World, a: Animal) -> void:
 func _stage5_checks(world: World, a: Animal) -> void:
 	# Открываем ещё одного зверя для списка.
 	var second: Animal = world.animals[GameState.spots[5]["id"]]
+	if not second.is_awake():
+		GameState.skip_to_next_phase()  # нічний/денний вид — чекаємо його часу
+	check(second.is_awake(), "day/night: species awake after waiting")
 	world.player.global_position = second.global_position + Vector2(0, 20)
 	await frames(5)
 	await get_tree().create_timer(1.0).timeout
