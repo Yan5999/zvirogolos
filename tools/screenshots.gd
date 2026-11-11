@@ -20,6 +20,7 @@ func _ready() -> void:
 	await _shot("01_menu")
 	menu.queue_free()
 	GameState.reset_progress()
+	GameState.intro_seen = true
 	var world: World = WORLD.instantiate() as World
 	add_child(world)
 	await _frames(30)

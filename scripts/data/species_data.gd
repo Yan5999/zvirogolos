@@ -8,6 +8,42 @@ enum Hideout { BUSH, ROCK, BURROW, SNOWDRIFT, REEDS }
 enum Ears { NONE, POINTY, ROUND, LONG }
 enum Feature { NONE, HORN, BEAK, CAP, SPIKES, ANTLERS, HUMP, SHELL, TUSKS }
 enum Tail { NONE, SHORT, BUSHY, THIN, FLAT }
+enum Status { LC, NT, VU, EN, CR }
+enum ActiveTime { ANY, DAY, NIGHT }
+
+const STATUS_NAMES: Array[String] = [
+	"Найменший ризик", "Близький до загрози", "Вразливий", "Під загрозою", "На межі зникнення",
+]
+const STATUS_COLORS: Array[Color] = [
+	Color("6fbf73"), Color("c8d050"), Color("f0b030"), Color("ec7a2f"), Color("d83a3a"),
+]
+const BIOME_NAMES: Array[String] = ["у лісі", "у пустелі", "біля озера", "у снігах"]
+const HIDEOUT_NAMES: Array[String] = ["у кущі", "за каменем", "у норі", "у кучугурі", "в очереті"]
+
+
+func status_name() -> String:
+	return "%s (%s)" % [STATUS_NAMES[status], Status.keys()[status]]
+
+
+## Чи активний вид у цей час доби.
+func is_awake(night: bool) -> bool:
+	match active_time:
+		ActiveTime.DAY:
+			return not night
+		ActiveTime.NIGHT:
+			return night
+	return true
+
+
+## Підказка, де і коли шукати.
+func hint_text() -> String:
+	var when: String = ""
+	match active_time:
+		ActiveTime.DAY:
+			when = ", вдень"
+		ActiveTime.NIGHT:
+			when = ", вночі"
+	return "Шукай %s %s%s" % [BIOME_NAMES[biome], HIDEOUT_NAMES[hideout], when]
 
 @export var id: StringName
 @export var display_name: String = ""
@@ -39,6 +75,12 @@ enum Tail { NONE, SHORT, BUSHY, THIN, FLAT }
 @export_range(0.5, 2.0, 0.01) var base_pitch: float = 1.0
 ## Случайный разброс питча ± при каждом проигрывании.
 @export_range(0.0, 0.3, 0.01) var pitch_variance: float = 0.06
+
+@export_group("Природа")
+## Охоронний статус МСОП (Червоний список).
+@export var status: Status = Status.LC
+## Коли звір не спить і може вийти зі схованки.
+@export var active_time: ActiveTime = ActiveTime.ANY
 
 @export_group("Поведінка")
 @export var wanders: bool = true

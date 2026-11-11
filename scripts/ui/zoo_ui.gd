@@ -13,6 +13,8 @@ const ENTRY_SCENE: PackedScene = preload("res://scenes/ui/zoo_entry.tscn")
 @onready var list: VBoxContainer = %List
 @onready var empty_label: Label = %EmptyLabel
 @onready var close_button: Button = %CloseButton
+@onready var chorus_button: Button = %ChorusButton
+@onready var clue_label: Label = %ClueLabel
 @onready var confirm_dialog: ConfirmationDialog = %ConfirmDialog
 
 var _rows: Array[ZooEntry] = []
@@ -22,6 +24,7 @@ var _pending_delete: String = ""
 func _ready() -> void:
 	visible = false
 	close_button.pressed.connect(close)
+	chorus_button.pressed.connect(_on_chorus)
 	confirm_dialog.confirmed.connect(_on_delete_confirmed)
 	GameState.animal_updated.connect(_on_data_changed)
 	GameState.animal_discovered.connect(_on_data_changed)
@@ -53,6 +56,7 @@ func close() -> void:
 	if focused:
 		focused.release_focus()  # чтобы LineEdit успел применить переименование
 	AudioManager.stop_preview()
+	AudioManager.stop_chorus()
 	visible = false
 	get_tree().paused = false
 	AudioManager.play_ui(&"close")
@@ -83,6 +87,27 @@ func refresh() -> void:
 			var id: String = recs[i]["id"]
 			row.setup(recs[i], GameState.species_of(id), GameState.has_voice(id))
 	empty_label.visible = found == 0
+	var voiced: int = 0
+	for rec: Dictionary in recs:
+		if GameState.has_voice(rec["id"]):
+			voiced += 1
+	chorus_button.disabled = voiced < 2
+	chorus_button.text = "Хор (%d)" % voiced
+	clue_label.text = _next_clue()
+
+
+## Підказка про одного ще не знайденого звіра (без назви виду — загадка).
+func _next_clue() -> String:
+	for spot: Dictionary in GameState.spots:
+		if not GameState.is_discovered(spot["id"]):
+			var sp: SpeciesData = GameState.get_species(spot["species"])
+			return "Підказка: %s. «%s»" % [sp.hint_text(), sp.description.get_slice(".", 0)]
+	return "Усіх звірів знайдено!"
+
+
+func _on_chorus() -> void:
+	AudioManager.stop_preview()
+	AudioManager.play_chorus(GameState.chorus_voices())
 
 
 func _on_data_changed(_id: String) -> void:

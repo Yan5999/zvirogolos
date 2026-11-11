@@ -18,3 +18,4 @@ ear_scale = 0.6
 face_mask = true
 tail = 1
 base_pitch = 0.95
+active_time = 2

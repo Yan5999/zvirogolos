@@ -17,3 +17,4 @@ ear_scale = 0.6
 feature = 4
 head_scale = 0.85
 base_pitch = 1.35
+active_time = 2

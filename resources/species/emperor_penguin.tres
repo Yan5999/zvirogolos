@@ -17,3 +17,4 @@ body_radii = Vector2(9, 13)
 ears = 0
 feature = 2
 head_scale = 0.9
+status = 1

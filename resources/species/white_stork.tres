@@ -19,3 +19,4 @@ feature = 2
 tail = 1
 neck_length = 1.2
 head_scale = 0.85
+active_time = 1

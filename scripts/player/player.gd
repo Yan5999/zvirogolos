@@ -51,12 +51,19 @@ func _update_weather() -> void:
 	if b == _biome:
 		return
 	_biome = b
+	# Вітер у пустелі дме вбік, сніг і листя падають згори.
+	weather.direction = Vector2(1.0, 0.15) if b == WorldGen.Biome.DESERT else Vector2(0.25, 1.0)
+	weather.initial_velocity_min = 140.0 if b == WorldGen.Biome.DESERT else 40.0
+	weather.initial_velocity_max = 220.0 if b == WorldGen.Biome.DESERT else 70.0
 	match b:
 		WorldGen.Biome.SNOW:
 			weather.color = Color(0.72, 0.84, 0.97)
 			weather.emitting = true
 		WorldGen.Biome.FOREST:
 			weather.color = Color(0.85, 0.6, 0.25)
+			weather.emitting = true
+		WorldGen.Biome.DESERT:
+			weather.color = Color(0.93, 0.8, 0.55, 0.6)
 			weather.emitting = true
 		_:
 			weather.emitting = false

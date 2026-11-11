@@ -155,6 +155,30 @@ func play_voice_at(stream: AudioStream, source: Node2D, pitch: float = 1.0) -> b
 	return true
 
 
+## «Хор»: голоси всіх звірів по черзі з накладанням (працює і на паузі).
+## voices — масив [AudioStreamWAV, pitch]. Повертає кількість голосів.
+func play_chorus(voices: Array, gap: float = 0.55) -> int:
+	stop_chorus()
+	var n: int = mini(voices.size(), 30)
+	for i: int in n:
+		var p: AudioStreamPlayer = _make_player(BUS_VOICES, "Chorus%d" % i)
+		p.process_mode = Node.PROCESS_MODE_ALWAYS
+		p.add_to_group(&"chorus")
+		p.stream = voices[i][0]
+		p.pitch_scale = clampf(float(voices[i][1]), 0.5, 2.0)
+		p.volume_db = -3.0
+		p.finished.connect(p.queue_free)
+		get_tree().create_timer(gap * i, true).timeout.connect(func() -> void:
+			if is_instance_valid(p):
+				p.play())
+	return n
+
+
+func stop_chorus() -> void:
+	for p: Node in get_tree().get_nodes_in_group(&"chorus"):
+		p.queue_free()
+
+
 func active_voice_count() -> int:
 	var n: int = 0
 	for p: AudioStreamPlayer2D in _voice_players:

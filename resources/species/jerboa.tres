@@ -18,3 +18,4 @@ ears = 3
 tail = 3
 head_scale = 1.1
 base_pitch = 1.5
+active_time = 2

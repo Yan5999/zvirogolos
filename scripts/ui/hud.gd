@@ -6,12 +6,21 @@ extends CanvasLayer
 @onready var hint_label: Label = %HintLabel
 @onready var toast_label: Label = %ToastLabel
 @onready var minimap: MapView = %Minimap
+@onready var clock_label: Label = %ClockLabel
 
 var _toast_tween: Tween
+var _clock_timer: float = 0.0
 
 
 func _ready() -> void:
 	toast_label.modulate.a = 0.0
+
+
+func _process(delta: float) -> void:
+	_clock_timer -= delta
+	if _clock_timer <= 0.0:
+		_clock_timer = 0.5
+		clock_label.text = DayNight.clock_text() + "  ·  N — чекати"
 
 
 func set_progress(found: int, total: int) -> void:

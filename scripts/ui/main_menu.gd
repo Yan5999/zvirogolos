@@ -40,7 +40,7 @@ func _on_play() -> void:
 
 
 func _on_reset_confirmed() -> void:
-	GameState.reset_progress()
+	GameState.reset_progress(true)
 	AudioManager.play_ui(&"delete")
 	_refresh()
 	play_button.grab_focus()

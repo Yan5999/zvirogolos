@@ -18,3 +18,4 @@ ear_scale = 0.6
 tail = 1
 base_pitch = 0.7
 wander_speed = 20.0
+status = 2

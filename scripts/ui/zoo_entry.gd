@@ -35,7 +35,8 @@ func setup(record: Dictionary, species: SpeciesData, has_voice: bool) -> void:
 	_current_name = String(record.get("name", ""))
 	name_edit.text = _current_name
 	var date: String = String(record.get("discovered_at", "")).replace("T", " ").left(16)
-	meta_label.text = "%s · знайдено %s · %s" % [species.display_name, date, "голос записано" if has_voice else "без голосу"]
+	meta_label.text = "%s · %s · знайдено %s · %s" % [species.display_name, species.status_name(), date, "голос записано" if has_voice else "без голосу"]
+	tooltip_text = "%s (%s)\n%s\nСтатус МСОП: %s" % [species.display_name, species.latin_name, species.description, species.status_name()]
 	play_button.disabled = not has_voice
 	record_button.text = "Перезаписати" if has_voice else "Записати"
 	icon.queue_redraw()
@@ -61,3 +62,6 @@ func _on_icon_draw() -> void:
 	icon.draw_circle(c + Vector2(12, -11), 2.5, Color.WHITE)
 	icon.draw_circle(c + Vector2(13, -11), 1.3, Color("1e1e24"))
 	icon.draw_circle(c + Vector2(-12, 6), 3, _species.accent_color)
+	# Кольорова мітка охоронного статусу.
+	icon.draw_circle(Vector2(7, 7), 6, Color(0, 0, 0, 0.5))
+	icon.draw_circle(Vector2(7, 7), 5, SpeciesData.STATUS_COLORS[_species.status])
