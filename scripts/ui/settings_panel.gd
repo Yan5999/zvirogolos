@@ -8,6 +8,8 @@ signal closed
 @onready var master_slider: HSlider = %MasterSlider
 @onready var voices_slider: HSlider = %VoicesSlider
 @onready var ui_slider: HSlider = %UiSlider
+@onready var music_slider: HSlider = %MusicSlider
+@onready var ambient_slider: HSlider = %AmbientSlider
 @onready var device_option: OptionButton = %DeviceOption
 @onready var fullscreen_check: CheckButton = %FullscreenCheck
 @onready var back_button: Button = %BackButton
@@ -18,6 +20,8 @@ func _ready() -> void:
 	master_slider.value_changed.connect(func(v: float) -> void: AudioManager.set_bus_volume(AudioManager.BUS_MASTER, v))
 	voices_slider.value_changed.connect(func(v: float) -> void: AudioManager.set_bus_volume(AudioManager.BUS_VOICES, v))
 	ui_slider.value_changed.connect(func(v: float) -> void: AudioManager.set_bus_volume(AudioManager.BUS_UI, v))
+	music_slider.value_changed.connect(func(v: float) -> void: AudioManager.set_bus_volume(AudioManager.BUS_MUSIC, v))
+	ambient_slider.value_changed.connect(func(v: float) -> void: AudioManager.set_bus_volume(AudioManager.BUS_AMBIENT, v))
 	ui_slider.drag_ended.connect(func(_c: bool) -> void: AudioManager.play_ui(&"click"))
 	voices_slider.drag_ended.connect(func(_c: bool) -> void: AudioManager.play_ui(&"click"))
 	device_option.item_selected.connect(_on_device_selected)
@@ -30,6 +34,8 @@ func open() -> void:
 	master_slider.set_value_no_signal(AudioManager.get_bus_volume(AudioManager.BUS_MASTER))
 	voices_slider.set_value_no_signal(AudioManager.get_bus_volume(AudioManager.BUS_VOICES))
 	ui_slider.set_value_no_signal(AudioManager.get_bus_volume(AudioManager.BUS_UI))
+	music_slider.set_value_no_signal(AudioManager.get_bus_volume(AudioManager.BUS_MUSIC))
+	ambient_slider.set_value_no_signal(AudioManager.get_bus_volume(AudioManager.BUS_AMBIENT))
 	device_option.clear()
 	var devices: PackedStringArray = AudioManager.input_devices()
 	for d: String in devices:

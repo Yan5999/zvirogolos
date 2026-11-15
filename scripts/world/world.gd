@@ -59,6 +59,7 @@ func _ready() -> void:
 	story = StoryPanel.new()
 	add_child(story)
 	GameState.night_changed.connect(_on_night_changed)
+	AudioManager.enter_world(gen.biome_at(player.global_position), GameState.is_night())
 	if not GameState.intro_seen:
 		_show_intro.call_deferred()
 
@@ -76,6 +77,7 @@ func _show_finale() -> void:
 
 
 func _on_night_changed(night: bool) -> void:
+	AudioManager.set_night(night)
 	if night:
 		hud.show_toast("Настала ніч — прокидаються нічні звірі", 3.0)
 	else:

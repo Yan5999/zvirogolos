@@ -12,6 +12,8 @@ var _facing: float = 1.0
 var _bob_time: float = 0.0
 var _biome_timer: float = 0.0
 var _biome: int = -1
+var _step_dist: float = 0.0
+var fireflies: CPUParticles2D
 
 @onready var visual: Node2D = $Visual
 @onready var camera: Camera2D = $Camera2D
@@ -23,6 +25,8 @@ func _ready() -> void:
 	visual.draw.connect(_on_visual_draw)
 	visual.queue_redraw()
 	queue_redraw()
+	_make_fireflies()
+	GameState.night_changed.connect(func(_n: bool) -> void: _refresh_fireflies())
 
 
 func _physics_process(delta: float) -> void:
@@ -37,6 +41,13 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	_animate(delta)
 	var running: bool = velocity.length() > walk_speed * 1.05
+	if velocity.length() > 40.0:
+		_step_dist += velocity.length() * delta
+		if _step_dist >= (AudioManager.STRIDE_RUN if running else AudioManager.STRIDE_WALK):
+			_step_dist = 0.0
+			AudioManager.play_step(_biome)
+	else:
+		_step_dist = AudioManager.STRIDE_WALK * 0.7
 	if dust.emitting != running:
 		dust.emitting = running
 	_biome_timer -= delta
@@ -51,6 +62,8 @@ func _update_weather() -> void:
 	if b == _biome:
 		return
 	_biome = b
+	AudioManager.set_biome(b)
+	_refresh_fireflies()
 	# Вітер у пустелі дме вбік, сніг і листя падають згори.
 	weather.direction = Vector2(1.0, 0.15) if b == WorldGen.Biome.DESERT else Vector2(0.25, 1.0)
 	weather.initial_velocity_min = 140.0 if b == WorldGen.Biome.DESERT else 40.0
@@ -111,3 +124,52 @@ func _on_visual_draw() -> void:
 	visual.draw_circle(Vector2(3, -25.5), 1.2, Color("2c2c2c"))
 	DrawUtil.draw_ellipse(visual, Vector2(0, -29), Vector2(10, 2.5), Color("8f8a5a"))
 	DrawUtil.draw_ellipse(visual, Vector2(0, -31), Vector2(6, 4), Color("a39e6a"))
+
+
+## Світляки: екранний шар (CanvasLayer не темніє від CanvasModulate), лише вночі в лісі та біля озера.
+func _make_fireflies() -> void:
+	var layer: CanvasLayer = CanvasLayer.new()
+	layer.name = "FirefliesLayer"
+	layer.layer = 0
+	add_child(layer)
+	var g: Gradient = Gradient.new()
+	g.colors = PackedColorArray([Color(1, 1, 1, 1), Color(1, 1, 1, 0)])
+	var tex: GradientTexture2D = GradientTexture2D.new()
+	tex.gradient = g
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.5)
+	tex.fill_to = Vector2(0.5, 0.0)
+	tex.width = 32
+	tex.height = 32
+	var life: Gradient = Gradient.new()
+	life.offsets = PackedFloat32Array([0.0, 0.2, 0.8, 1.0])
+	life.colors = PackedColorArray([Color(1, 0.95, 0.4, 0), Color(1, 0.95, 0.4, 1), Color(0.9, 1, 0.5, 1), Color(0.9, 1, 0.5, 0)])
+	var mat: CanvasItemMaterial = CanvasItemMaterial.new()
+	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	fireflies = CPUParticles2D.new()
+	fireflies.name = "Fireflies"
+	fireflies.texture = tex
+	fireflies.material = mat
+	fireflies.amount = 36
+	fireflies.lifetime = 7.0
+	fireflies.preprocess = 7.0
+	fireflies.emitting = false
+	fireflies.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	var size: Vector2 = get_viewport_rect().size
+	fireflies.position = size * 0.5
+	fireflies.emission_rect_extents = size * 0.5
+	fireflies.direction = Vector2(0, -1)
+	fireflies.spread = 180.0
+	fireflies.initial_velocity_min = 6.0
+	fireflies.initial_velocity_max = 16.0
+	fireflies.gravity = Vector2.ZERO
+	fireflies.scale_amount_min = 0.25
+	fireflies.scale_amount_max = 0.5
+	fireflies.color_ramp = life
+	layer.add_child(fireflies)
+
+
+func _refresh_fireflies() -> void:
+	if fireflies == null:
+		return
+	fireflies.emitting = GameState.is_night() and (_biome == WorldGen.Biome.FOREST or _biome == WorldGen.Biome.LAKE)

@@ -23,6 +23,7 @@ func _ready() -> void:
 	quit_button.visible = not OS.has_feature("web")
 	critters.draw.connect(_on_critters_draw)
 	AudioManager.attach_click_sounds($Center)
+	AudioManager.enter_menu()
 	_refresh()
 	play_button.grab_focus()
 

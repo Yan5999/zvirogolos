@@ -269,6 +269,31 @@ func _stage6_checks(world: World) -> void:
 	world.map_screen.close()
 	await frames(1)
 	check(not get_tree().paused, "map closes")
+	# Музика, довкілля, кроки, світляки.
+	for bus: StringName in [AudioManager.BUS_MUSIC, AudioManager.BUS_AMBIENT]:
+		check(AudioServer.get_bus_index(bus) >= 0, "bus %s exists" % bus)
+	var waited: int = 0
+	while AudioManager.music.cached_tracks() < 1 and waited < 600:
+		await frames(1)
+		waited += 1
+	check(AudioManager.music.cached_tracks() >= 1, "music track generated in thread")
+	check(AudioManager.music.current_key() >= 0, "music playing")
+	var tr: AudioStreamWAV = Synth.build_track(Synth.track_key(WorldGen.Biome.SNOW, true))
+	check(tr.loop_mode == AudioStreamWAV.LOOP_FORWARD and tr.get_length() > 15.0, "night snow track loops ~16 s")
+	for b: int in 4:
+		check(Synth.build_step(b, 0).get_length() > 0.1, "step sound biome %d" % b)
+	AudioManager.set_night(true)
+	AudioManager.set_biome(WorldGen.Biome.FOREST)
+	world.player._biome = WorldGen.Biome.FOREST
+	GameState.time_of_day = 0.0
+	world.player._refresh_fireflies()
+	check(world.player.fireflies.emitting, "fireflies at night in forest")
+	GameState.time_of_day = 0.5
+	world.player._refresh_fireflies()
+	check(not world.player.fireflies.emitting, "no fireflies by day")
+	AudioManager.music.set_duck(true)
+	check(AudioManager.music.is_ducked(), "music ducks for recording")
+	AudioManager.music.set_duck(false)
 	# Стабильность: 600 кадров бега по карте без ошибок.
 	var t0: int = Time.get_ticks_msec()
 	world.player.global_position = GameState.world_gen.start_position()

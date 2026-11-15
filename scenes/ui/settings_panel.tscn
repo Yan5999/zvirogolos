@@ -84,6 +84,34 @@ max_value = 1.0
 step = 0.01
 value = 0.8
 
+[node name="MusicLabel" type="Label" parent="Center/Panel/Margin/VBox/Grid"]
+layout_mode = 2
+text = "Музика"
+
+[node name="MusicSlider" type="HSlider" parent="Center/Panel/Margin/VBox/Grid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 24)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.01
+value = 0.8
+
+[node name="AmbientLabel" type="Label" parent="Center/Panel/Margin/VBox/Grid"]
+layout_mode = 2
+text = "Довкілля та кроки"
+
+[node name="AmbientSlider" type="HSlider" parent="Center/Panel/Margin/VBox/Grid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 24)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.01
+value = 0.8
+
 [node name="UiLabel" type="Label" parent="Center/Panel/Margin/VBox/Grid"]
 layout_mode = 2
 text = "Інтерфейс"

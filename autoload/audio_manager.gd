@@ -6,7 +6,15 @@ const BUS_MASTER: StringName = &"Master"
 const BUS_VOICES: StringName = &"Voices"
 const BUS_UI: StringName = &"UI"
 const BUS_RECORD: StringName = &"Record"
-const VOLUME_BUSES: Array[StringName] = [BUS_MASTER, BUS_VOICES, BUS_UI]
+const BUS_MUSIC: StringName = &"Music"
+const BUS_AMBIENT: StringName = &"Ambient"
+const VOLUME_BUSES: Array[StringName] = [BUS_MASTER, BUS_VOICES, BUS_UI, BUS_MUSIC, BUS_AMBIENT]
+## Початкова гучність шин (до першого збереження в налаштуваннях).
+const DEFAULT_VOLUMES: Dictionary = {&"Master": 0.8, &"Voices": 0.8, &"UI": 0.8, &"Music": 0.5, &"Ambient": 0.7}
+## Довжина кроку (px) при ході/бігу.
+const STRIDE_WALK: float = 52.0
+const STRIDE_RUN: float = 72.0
+const STEP_VARIANTS: int = 2
 const UI_PLAYERS: int = 3
 ## Не больше стольких голосов животных одновременно.
 const MAX_VOICES: int = 4
@@ -27,13 +35,20 @@ var _voice_players: Array[AudioStreamPlayer2D] = []
 var _voice_sources: Array[Node2D] = []
 var _level: float = 0.0
 var _mic_frames: int = 0
+var music: MusicDirector
+var _step_players: Array[AudioStreamPlayer] = []
+var _step_next: int = 0
+var _steps: Array[Array] = []
+var _in_world: bool = false
+var _biome: int = 0
+var _night: bool = false
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_ensure_buses()
 	for bus: StringName in VOLUME_BUSES:
-		set_bus_volume(bus, float(SaveManager.get_setting("audio", String(bus), 0.8)), false)
+		set_bus_volume(bus, float(SaveManager.get_setting("audio", String(bus), DEFAULT_VOLUMES.get(bus, 0.8))), false)
 	var saved_device: String = String(SaveManager.get_setting("audio", "input_device", ""))
 	if not saved_device.is_empty() and saved_device in AudioServer.get_input_device_list():
 		AudioServer.input_device = saved_device
@@ -57,6 +72,18 @@ func _ready() -> void:
 		_voice_sources.append(null)
 	set_process(false)
 	_build_ui_sounds()
+	for i: int in 2:
+		var sp: AudioStreamPlayer = _make_player(BUS_AMBIENT, "StepPlayer%d" % i)
+		sp.volume_db = -9.0
+		_step_players.append(sp)
+	for b: int in 4:
+		var variants: Array = []
+		for v: int in STEP_VARIANTS:
+			variants.append(Synth.build_step(b, v))
+		_steps.append(variants)
+	music = MusicDirector.new()
+	music.name = "Music"
+	add_child(music)
 
 
 ## Останавливаем всё при выходе, чтобы AudioServer не держал playback'и (утечки при quit).
@@ -65,6 +92,8 @@ func _exit_tree() -> void:
 
 
 func stop_all() -> void:
+	if music:
+		music.stop_all()
 	if is_recording():
 		_record.set_recording_active(false)
 	for child: Node in get_children():
@@ -84,12 +113,18 @@ func _make_player(bus: StringName, node_name: String) -> AudioStreamPlayer:
 
 ## Если bus layout не загрузился — создаём шины и эффекты кодом.
 func _ensure_buses() -> void:
-	for bus: StringName in [BUS_VOICES, BUS_UI, BUS_RECORD]:
+	for bus: StringName in [BUS_VOICES, BUS_UI, BUS_RECORD, BUS_MUSIC, BUS_AMBIENT]:
 		if AudioServer.get_bus_index(bus) == -1:
 			AudioServer.add_bus()
 			var idx: int = AudioServer.bus_count - 1
 			AudioServer.set_bus_name(idx, bus)
 			AudioServer.set_bus_send(idx, BUS_MASTER)
+			if bus == BUS_MUSIC:
+				var reverb: AudioEffectReverb = AudioEffectReverb.new()
+				reverb.room_size = 0.6
+				reverb.wet = 0.22
+				reverb.dry = 0.9
+				AudioServer.add_bus_effect(idx, reverb)
 	var rec: int = AudioServer.get_bus_index(BUS_RECORD)
 	AudioServer.set_bus_mute(rec, true)  # без обратной связи из колонок
 	for e: int in AudioServer.get_bus_effect_count(rec):
@@ -127,6 +162,44 @@ func set_bus_volume(bus: StringName, linear: float, persist: bool = true) -> voi
 	AudioServer.set_bus_volume_db(idx, linear_to_db(maxf(linear, 0.0001)))
 	if persist:
 		SaveManager.set_setting("audio", String(bus), linear)
+
+
+# --- Музика, довкілля, кроки ---------------------------------------------------------
+
+func enter_menu() -> void:
+	_in_world = false
+	music.set_context(false, 0, false)
+
+
+func enter_world(biome: int, night: bool) -> void:
+	_in_world = true
+	_biome = biome
+	_night = night
+	music.set_context(true, _biome, _night)
+
+
+func set_biome(biome: int) -> void:
+	_biome = biome
+	if _in_world:
+		music.set_context(true, _biome, _night)
+
+
+func set_night(night: bool) -> void:
+	_night = night
+	if _in_world:
+		music.set_context(true, _biome, _night)
+
+
+## Крок гравця: звук залежить від біому (трава / пісок / берег / сніг).
+func play_step(biome: int) -> void:
+	if biome < 0 or biome >= _steps.size():
+		return
+	var p: AudioStreamPlayer = _step_players[_step_next]
+	_step_next = (_step_next + 1) % _step_players.size()
+	var variants: Array = _steps[biome]
+	p.stream = variants[randi() % variants.size()]
+	p.pitch_scale = randf_range(0.9, 1.12)
+	p.play()
 
 
 # --- Голоса животных (пул) ------------------------------------------------------
@@ -234,6 +307,7 @@ func set_input_device(device: String) -> void:
 
 ## Открыть поток микрофона (только пока открыт диалог записи).
 func open_mic() -> void:
+	music.set_duck(true)
 	_mic_frames = 0
 	_level = 0.0
 	if _capture:
@@ -243,6 +317,7 @@ func open_mic() -> void:
 
 
 func close_mic() -> void:
+	music.set_duck(false)
 	if is_recording():
 		_record.set_recording_active(false)
 	_mic_player.stop()
@@ -327,7 +402,7 @@ func _build_ui_sounds() -> void:
 	_ui_sounds[&"click"] = _synth([1046.5], 0.045, 0.25)
 	_ui_sounds[&"open"] = _synth([523.25, 783.99], 0.07, 0.3)
 	_ui_sounds[&"close"] = _synth([783.99, 523.25], 0.06, 0.25)
-	_ui_sounds[&"discover"] = _synth([523.25, 659.25, 783.99, 1046.5], 0.09, 0.35)
+	_ui_sounds[&"discover"] = _synth([523.25, 659.25, 783.99, 1046.5, 1318.5], 0.1, 0.35)
 	_ui_sounds[&"save"] = _synth([659.25, 987.77], 0.09, 0.3)
 	_ui_sounds[&"record"] = _synth([880.0], 0.08, 0.3)
 	_ui_sounds[&"delete"] = _synth([392.0, 261.63], 0.1, 0.3)
