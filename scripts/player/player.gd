@@ -82,6 +82,10 @@ func _update_weather() -> void:
 			weather.emitting = false
 
 
+func current_biome() -> int:
+	return _biome
+
+
 func is_moving() -> bool:
 	return velocity.length() > 40.0
 

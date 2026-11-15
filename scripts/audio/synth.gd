@@ -144,7 +144,7 @@ static func _add_note(buf: PackedFloat32Array, start: int, freq: float, amp: flo
 
 # --- Фонові шари (зациклені) ------------------------------------------------------
 
-const AMBIENT_KINDS: Array[StringName] = [&"wind", &"water", &"leaves", &"crickets"]
+const AMBIENT_KINDS: Array[StringName] = [&"wind", &"water", &"leaves", &"crickets", &"rain"]
 const AMB_SECONDS: float = 5.0
 
 
@@ -172,7 +172,10 @@ static func _fill_noise(out: PackedFloat32Array, kind: StringName) -> void:
 	for i: int in raw.size():
 		var x: float = rng.randf() * 2.0 - 1.0
 		lp += (x - lp) * alpha
-		raw[i] = (x - lp) if kind == &"leaves" else lp
+		if kind == &"rain":
+			raw[i] = x * 0.55 + (x - lp) * 0.45
+		else:
+			raw[i] = (x - lp) if kind == &"leaves" else lp
 	for i: int in n:
 		var v: float = raw[i]
 		if i < fade:
@@ -188,6 +191,8 @@ static func _fill_noise(out: PackedFloat32Array, kind: StringName) -> void:
 			&"leaves":
 				var g: float = maxf(0.0, sin(TAU * 0.4 * t))
 				m = 0.25 + 0.75 * g * g
+			&"rain":
+				m = 0.85 + 0.15 * sin(TAU * 1.4 * t)
 		out[i] = v * m
 
 
@@ -233,6 +238,16 @@ static func build_event(kind: StringName, variant: int = 0) -> AudioStreamWAV:
 					var idx: int = int((0.03 + p * 0.14) * RATE) + i
 					var s: float = sin(PI * t / 0.09)
 					buf[idx] += (sin(TAU * 150.0 * t) * (0.55 + 0.45 * sin(TAU * 48.0 * t)) + 0.3 * sin(TAU * 420.0 * t)) * s * 0.5
+		&"thunder":
+			buf.resize(int(3.6 * RATE))
+			var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+			rng.seed = 909
+			var lp: float = 0.0
+			for i: int in buf.size():
+				var t: float = float(i) / RATE
+				lp += (rng.randf() * 2.0 - 1.0 - lp) * 0.025
+				var env: float = minf(1.0, t / 0.15) * exp(-t * 1.0) * (0.75 + 0.25 * sin(TAU * 3.3 * t))
+				buf[i] = lp * env * 9.0
 		_:  # hoot — сова
 			buf.resize(int(1.3 * RATE))
 			var notes: Array[Vector3] = [Vector3(0.05, 0.35, 330.0), Vector3(0.55, 0.6, 296.0)]

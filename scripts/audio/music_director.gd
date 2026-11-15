@@ -29,6 +29,7 @@ var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _duck: float = 1.0
 var _duck_target: float = 1.0
 var _ambient_ready: bool = false
+var _rain_level: float = 0.0
 
 
 func _ready() -> void:
@@ -79,6 +80,25 @@ func set_context(in_world: bool, biome: int, night: bool) -> void:
 
 func set_duck(on: bool) -> void:
 	_duck_target = 0.0 if on else 1.0
+
+
+## Сила дощу 0..1 (викликає Weather): вмикає шар дощу й трохи приглушує решту довкілля.
+func set_rain(level: float) -> void:
+	_rain_level = clampf(level, 0.0, 1.0)
+	if _rain_level > 0.0:
+		_ensure_ambient()
+
+
+func rain_level() -> float:
+	return _rain_level
+
+
+func play_thunder() -> void:
+	if _duck < 0.9 or not _events.has(&"thunder"):
+		return
+	_event_player.stream = _events[&"thunder"][0]
+	_event_player.pitch_scale = _rng.randf_range(0.85, 1.05)
+	_event_player.play()
 
 
 func is_ducked() -> bool:
@@ -147,7 +167,7 @@ func _ensure_ambient() -> void:
 		_layers[kind] = p
 		_layer_level[kind] = 0.0
 		_layer_target[kind] = 0.0
-	for kind: StringName in [&"chirp", &"croak", &"hoot"]:
+	for kind: StringName in [&"chirp", &"croak", &"hoot", &"thunder"]:
 		var list: Array = []
 		for v: int in (3 if kind == &"chirp" else 1):
 			list.append(Synth.build_event(kind, v))
@@ -194,6 +214,10 @@ func _process(delta: float) -> void:
 	for kind: StringName in _layers:
 		var lp: AudioStreamPlayer = _layers[kind]
 		var tgt: float = _layer_target[kind]
+		if kind == &"rain":
+			tgt = _rain_level * 0.85
+		elif kind != &"crickets":
+			tgt *= 1.0 - 0.5 * _rain_level
 		var lvl: float = move_toward(_layer_level[kind], tgt, delta / LAYER_FADE)
 		_layer_level[kind] = lvl
 		var lv: float = lvl * _duck
@@ -210,7 +234,7 @@ func _process(delta: float) -> void:
 
 
 func _play_random_event() -> void:
-	if _event_kinds.is_empty() or _duck < 0.9 or _event_player.playing:
+	if _event_kinds.is_empty() or _duck < 0.9 or _event_player.playing or _rain_level > 0.3:
 		return
 	var kind: StringName = _event_kinds[_rng.randi() % _event_kinds.size()]
 	var list: Array = _events.get(kind, [])

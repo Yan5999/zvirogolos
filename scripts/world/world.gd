@@ -28,6 +28,7 @@ var _default_hint: String = ""
 var _reopen_zoo: bool = false
 var day_night: DayNight
 var story: StoryPanel
+var weather: Weather
 
 
 func _ready() -> void:
@@ -56,6 +57,9 @@ func _ready() -> void:
 	day_night = DayNight.new()
 	add_child(day_night)
 	day_night.attach_lantern(player)
+	weather = Weather.new()
+	add_child(weather)
+	weather.setup(player, day_night, hud)
 	story = StoryPanel.new()
 	add_child(story)
 	GameState.night_changed.connect(_on_night_changed)

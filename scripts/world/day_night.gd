@@ -7,6 +7,8 @@ const NIGHT: Color = Color(0.28, 0.32, 0.58)
 const DAWN: Color = Color(0.95, 0.72, 0.66)
 const DUSK: Color = Color(1.0, 0.7, 0.52)
 
+## Затемнення від хмар 0..1 (виставляє Weather).
+var weather_dim: float = 0.0
 var lantern: PointLight2D
 var _gradient: Gradient = Gradient.new()
 
@@ -44,10 +46,12 @@ func _process(delta: float) -> void:
 
 func _apply() -> void:
 	var t: float = GameState.time_of_day
-	color = _gradient.sample(t)
+	var base: Color = _gradient.sample(t)
+	color = base.darkened(0.3 * weather_dim)
 	if lantern:
-		# Плавно: повна сила вночі, нуль удень.
-		var night_k: float = 1.0 - clampf((color.v - NIGHT.v) / (1.0 - NIGHT.v), 0.0, 1.0)
+		# Плавно: повна сила вночі, нуль удень (дощ підсилює ліхтар лише трохи).
+		var night_k: float = 1.0 - clampf((base.v - NIGHT.v) / (1.0 - NIGHT.v), 0.0, 1.0)
+		night_k = maxf(night_k, 0.35 * weather_dim)
 		lantern.energy = night_k * 0.9
 		lantern.visible = night_k > 0.02
 

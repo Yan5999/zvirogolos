@@ -294,6 +294,24 @@ func _stage6_checks(world: World) -> void:
 	AudioManager.music.set_duck(true)
 	check(AudioManager.music.is_ducked(), "music ducks for recording")
 	AudioManager.music.set_duck(false)
+	# Погода: дощ у лісі темніє, вмикає звук і блискавку; у пустелі не діє.
+	var wx: Weather = world.weather
+	check(wx != null, "weather node exists")
+	GameState.time_of_day = 0.5
+	world.player._biome = WorldGen.Biome.FOREST
+	wx.force_rain(true)
+	wx.tick(4.0)
+	check(wx.rain.emitting and wx.intensity > 0.99, "rain in forest")
+	check(world.day_night.weather_dim > 0.99 and AudioManager.music.rain_level() > 0.99, "rain dims world and starts sound")
+	wx.lightning()
+	await frames(5)
+	check(wx.flash.color.a > 0.0, "lightning flash")
+	world.player._biome = WorldGen.Biome.DESERT
+	wx.tick(4.0)
+	check(not wx.rain.emitting and wx.intensity == 0.0, "no rain in desert")
+	wx.force_rain(false)
+	check(Synth.build_event(&"thunder").get_length() > 3.0, "thunder sound")
+	AudioManager.music.set_rain(0.0)
 	# Стабильность: 600 кадров бега по карте без ошибок.
 	var t0: int = Time.get_ticks_msec()
 	world.player.global_position = GameState.world_gen.start_position()
