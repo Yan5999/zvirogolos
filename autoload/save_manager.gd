@@ -6,6 +6,7 @@ signal save_failed(message: String)
 
 const SAVE_PATH: String = "user://save.json"
 const VOICES_DIR: String = "user://voices/"
+const PHOTOS_DIR: String = "user://photos/"
 const SETTINGS_PATH: String = "user://settings.cfg"
 const SAVE_VERSION: int = 1
 
@@ -14,6 +15,7 @@ var settings: ConfigFile = ConfigFile.new()
 
 func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(VOICES_DIR)
+	DirAccess.make_dir_recursive_absolute(PHOTOS_DIR)
 	if settings.load(SETTINGS_PATH) != OK:
 		settings = ConfigFile.new()
 
@@ -56,6 +58,34 @@ func delete_save() -> void:
 		for file_name: String in dir.get_files():
 			if file_name.get_extension() == "wav":
 				dir.remove(file_name)
+	var photos: DirAccess = DirAccess.open(PHOTOS_DIR)
+	if photos:
+		for file_name: String in photos.get_files():
+			if file_name.get_extension() == "png":
+				photos.remove(file_name)
+
+
+# --- Фото ---------------------------------------------------------------------
+
+## Зберігає кадр (до 1280 px завширшки) і повертає ім'я файлу або "".
+func save_photo(img: Image) -> String:
+	if img == null or img.is_empty():
+		return ""
+	DirAccess.make_dir_recursive_absolute(PHOTOS_DIR)
+	var copy: Image = img.duplicate()
+	if copy.get_width() > 1280:
+		copy.resize(1280, int(1280.0 * copy.get_height() / copy.get_width()), Image.INTERPOLATE_BILINEAR)
+	var stamp: String = Time.get_datetime_string_from_system().replace(":", "-")
+	var file_name: String = "photo_%s_%d.png" % [stamp, Time.get_ticks_msec() % 100000]
+	if copy.save_png(PHOTOS_DIR + file_name) != OK:
+		return ""
+	return file_name
+
+
+func load_photo(file_name: String) -> Image:
+	if file_name.is_empty() or not FileAccess.file_exists(PHOTOS_DIR + file_name):
+		return null
+	return Image.load_from_file(PHOTOS_DIR + file_name)
 
 
 # --- Голоса -----------------------------------------------------------------

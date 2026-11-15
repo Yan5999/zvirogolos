@@ -8,6 +8,7 @@ signal animal_forgotten(id: String)
 signal progress_changed(found: int, total: int)
 
 signal night_changed(is_night: bool)
+signal achievement_unlocked(id: String)
 
 ## Seed першого світу (старі збереження без поля "seed" отримують саме його).
 const DEFAULT_SEED: int = 424242
@@ -33,12 +34,19 @@ var _spot_by_id: Dictionary[String, Dictionary] = {}
 ## Открытые животные: id -> {id, species, name, discovered_at, voice, position}
 var records: Dictionary[String, Dictionary] = {}
 var _voice_cache: Dictionary[String, AudioStreamWAV] = {}
+## Досягнення: id -> дата отримання.
+var achievements: Dictionary = {}
+## Лічильники: photos, guess_total, guess_correct, guess_best.
+var stats: Dictionary = {"photos": 0, "guess_total": 0, "guess_correct": 0, "guess_best": 0}
 
 
 func _ready() -> void:
 	for s: SpeciesData in SPECIES_DB.species:
 		species_by_id[s.id] = s
 	_load()
+	_check_progress(true)
+	animal_discovered.connect(func(_id: String) -> void: _check_progress())
+	animal_updated.connect(func(_id: String) -> void: _check_progress())
 
 
 func _generate_world(p_seed: int) -> void:
@@ -203,6 +211,8 @@ func update_animal_position(id: String, pos: Vector2) -> void:
 func reset_progress(new_world: bool = false) -> void:
 	records.clear()
 	_voice_cache.clear()
+	achievements.clear()
+	stats = {"photos": 0, "guess_total": 0, "guess_correct": 0, "guess_best": 0}
 	intro_seen = false
 	finale_seen = false
 	time_of_day = 0.35
@@ -255,6 +265,8 @@ func save() -> void:
 		"finale_seen": finale_seen,
 		"player": [player_position.x, player_position.y],
 		"animals": records.values(),
+		"achievements": achievements,
+		"stats": stats,
 	})
 
 
@@ -271,6 +283,12 @@ func _load() -> void:
 		var pos: Vector2 = Vector2(float(p[0]), float(p[1]))
 		if world_gen.is_walkable_pos(pos):
 			player_position = pos
+	var saved_ach: Variant = data.get("achievements", {})
+	achievements = (saved_ach as Dictionary).duplicate() if typeof(saved_ach) == TYPE_DICTIONARY else {}
+	var saved_stats: Variant = data.get("stats", {})
+	if typeof(saved_stats) == TYPE_DICTIONARY:
+		for k: String in stats:
+			stats[k] = int((saved_stats as Dictionary).get(k, 0))
 	records.clear()
 	var list: Array = data.get("animals", [])
 	for item: Variant in list:
@@ -293,3 +311,78 @@ static func record_position(rec: Dictionary, fallback: Vector2) -> Vector2:
 	if typeof(p) == TYPE_ARRAY and (p as Array).size() >= 2:
 		return Vector2(float(p[0]), float(p[1]))
 	return fallback
+
+
+# --- Фото, мінігра, досягнення ------------------------------------------------------
+
+## Реєструє зроблене фото: звірі в кадрі отримують його в альбом (якщо власного фото ще не мали).
+func register_photo(animal_ids: Array[String], photo_file: String) -> void:
+	stats["photos"] = int(stats["photos"]) + 1
+	for id: String in animal_ids:
+		if records.has(id) and not photo_file.is_empty() and String(records[id].get("photo", "")).is_empty():
+			records[id]["photo"] = photo_file
+			animal_updated.emit(id)
+	unlock_achievement("first_photo")
+	if not animal_ids.is_empty():
+		unlock_achievement("photo_animal")
+	_check_progress()
+	save()
+
+
+## Підсумок раунду «Вгадай голос»; streak — серія правильних із цим раундом.
+func record_guess(correct: bool, streak: int) -> void:
+	stats["guess_total"] = int(stats["guess_total"]) + 1
+	if correct:
+		stats["guess_correct"] = int(stats["guess_correct"]) + 1
+		stats["guess_best"] = maxi(int(stats["guess_best"]), streak)
+	_check_progress()
+	save()
+
+
+## Скільки звірів мають записаний голос.
+func voiced_count() -> int:
+	var n: int = 0
+	for id: String in records:
+		if has_voice(id):
+			n += 1
+	return n
+
+
+func unlock_achievement(id: String, silent: bool = false) -> void:
+	if achievements.has(id) or AchievementDB.find(id).is_empty():
+		return
+	achievements[id] = Time.get_datetime_string_from_system(false, true)
+	if not silent:
+		save()
+		achievement_unlocked.emit(id)
+
+
+## Видає досягнення, що випливають з поточного прогресу. silent — без сповіщень (при завантаженні).
+func _check_progress(silent: bool = false) -> void:
+	var found: int = found_count()
+	var tot: int = total()
+	var voiced: int = 0
+	var photographed: int = 0
+	for id: String in records:
+		var rec: Dictionary = records[id]
+		if not String(rec.get("voice", "")).is_empty():
+			voiced += 1
+		if not String(rec.get("photo", "")).is_empty():
+			photographed += 1
+		var sp: SpeciesData = species_of(id)
+		if sp and sp.active_time == SpeciesData.ActiveTime.NIGHT:
+			unlock_achievement("night_find", silent)
+	var checks: Array[Array] = [
+		["first_find", found >= 1], ["five_found", found >= 5], ["half_zoo", found >= 15],
+		["full_zoo", tot > 0 and found >= tot], ["first_voice", voiced >= 1],
+		["full_chorus", tot > 0 and voiced >= tot], ["photo_5", photographed >= 5],
+		["first_photo", int(stats["photos"]) >= 1],
+		["guess_3", int(stats["guess_best"]) >= 3], ["guess_7", int(stats["guess_best"]) >= 7],
+	]
+	for c: Array in checks:
+		if c[1]:
+			unlock_achievement(c[0], silent)
+	for b: int in AchievementDB.BIOME_IDS.size():
+		var bp: Vector2i = biome_progress(b)
+		if bp.y > 0 and bp.x >= bp.y:
+			unlock_achievement(AchievementDB.BIOME_IDS[b], silent)

@@ -9,6 +9,9 @@ const RAIN_MIN: float = 45.0
 const RAIN_MAX: float = 100.0
 const FADE_TIME: float = 3.0
 
+## Поточна сила дощу для інших систем (звірі ховаються від зливи).
+static var wet_level: float = 0.0
+
 var raining: bool = false
 var intensity: float = 0.0
 var rain: CPUParticles2D
@@ -33,6 +36,7 @@ func setup(player: Player, day_night: DayNight, hud: Hud) -> void:
 
 
 func _exit_tree() -> void:
+	wet_level = 0.0
 	if AudioManager and AudioManager.music:
 		AudioManager.music.set_rain(0.0)
 
@@ -50,6 +54,7 @@ func tick(delta: float) -> void:
 	var biome: int = _player.current_biome()
 	var wet: bool = raining and (biome == WorldGen.Biome.FOREST or biome == WorldGen.Biome.LAKE)
 	intensity = move_toward(intensity, 1.0 if wet else 0.0, delta / FADE_TIME)
+	wet_level = intensity
 	rain.emitting = intensity > 0.02
 	rain.modulate.a = intensity
 	_day_night.weather_dim = intensity
@@ -76,7 +81,14 @@ func lightning() -> void:
 	tw.tween_property(flash, "color:a", 0.1, 0.08)
 	tw.tween_property(flash, "color:a", 0.4, 0.05)
 	tw.tween_property(flash, "color:a", 0.0, 0.4)
-	get_tree().create_timer(_rng.randf_range(0.5, 1.6)).timeout.connect(AudioManager.music.play_thunder)
+	GameState.unlock_achievement("storm")
+	get_tree().create_timer(_rng.randf_range(0.5, 1.6)).timeout.connect(_on_thunder)
+
+
+## Грім: звук і переляк звірів.
+func _on_thunder() -> void:
+	AudioManager.music.play_thunder()
+	get_tree().call_group(&"animals", &"startle")
 
 
 func _build_visuals() -> void:

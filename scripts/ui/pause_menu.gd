@@ -4,11 +4,17 @@ extends CanvasLayer
 
 signal zoo_requested
 signal map_requested
+signal album_requested
+signal achievements_requested
+signal guess_requested
 signal main_menu_requested
 
 @onready var resume_button: Button = %ResumeButton
 @onready var zoo_button: Button = %ZooButton
 @onready var map_button: Button = %MapButton
+@onready var album_button: Button = %AlbumButton
+@onready var achievements_button: Button = %AchievementsButton
+@onready var guess_button: Button = %GuessButton
 @onready var settings_button: Button = %SettingsButton
 @onready var menu_button: Button = %MenuButton
 @onready var settings: SettingsPanel = $SettingsPanel
@@ -23,6 +29,15 @@ func _ready() -> void:
 	map_button.pressed.connect(func() -> void:
 		close()
 		map_requested.emit())
+	album_button.pressed.connect(func() -> void:
+		close()
+		album_requested.emit())
+	achievements_button.pressed.connect(func() -> void:
+		close()
+		achievements_requested.emit())
+	guess_button.pressed.connect(func() -> void:
+		close()
+		guess_requested.emit())
 	settings_button.pressed.connect(settings.open)
 	settings.closed.connect(settings_button.grab_focus)
 	menu_button.pressed.connect(func() -> void: main_menu_requested.emit())

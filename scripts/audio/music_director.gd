@@ -57,12 +57,19 @@ func _exit_tree() -> void:
 
 
 func stop_all() -> void:
+	set_process(false)
 	for p: AudioStreamPlayer in _players:
 		p.stop()
+		p.stream = null
 	for p: AudioStreamPlayer in _layers.values():
 		p.stop()
+		p.stream = null
 	if _event_player:
 		_event_player.stop()
+		_event_player.stream = null
+	_active = -1
+	_playing_key = -1
+	_want_key = -1
 
 
 ## Задає, що має звучати. in_world=false — тема меню без довкілля.

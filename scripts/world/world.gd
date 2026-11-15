@@ -7,7 +7,7 @@ const AUTOSAVE_INTERVAL: float = 15.0
 const INTERACT_DISTANCE: float = 90.0
 const ANIMAL_SCENE: PackedScene = preload("res://scenes/animal/animal.tscn")
 const INTRO_TITLE: String = "Ліс замовк"
-const INTRO_TEXT: String = "Колись цей край був сповнений голосів. Але звірі злякалися тиші, сховалися по кущах, норах і кучугурах — і забули, як звучать.\n\nЗнайди їх, дай кожному ім'я та подаруй голос. Хтось виходить лише вдень, хтось — тільки вночі: прислухайся до шелесту.\n\nWASD — йти, Shift — бігти, E — голос звіра, Tab — зоопарк, M — мапа, N — чекати до світанку/сутінків."
+const INTRO_TEXT: String = "Колись цей край був сповнений голосів. Але звірі злякалися тиші, сховалися по кущах, норах і кучугурах — і забули, як звучать.\n\nЗнайди їх, дай кожному ім'я та подаруй голос. Хтось виходить лише вдень, хтось — тільки вночі: прислухайся до шелесту.\n\nWASD — йти, Shift — бігти, E — голос звіра, Tab — зоопарк, M — мапа, F — фото, B — альбом, J — досягнення, G — вгадай голос, N — чекати до світанку/сутінків."
 const FINALE_TITLE: String = "Край знову співає"
 const FINALE_TEXT: String = "Усі %d звірів знайшлися. Послухай — це їхній хор, і кожен голос у ньому подарував ти.\n\nБагато з цих видів у природі потребують захисту: їхні статуси з Червоного списку МСОП є в зоопарку. Голоси можна перезаписувати, а з головного меню — почати у новому світі."
 
@@ -29,6 +29,10 @@ var _reopen_zoo: bool = false
 var day_night: DayNight
 var story: StoryPanel
 var weather: Weather
+var album: AlbumPanel
+var achievements_panel: AchievementsPanel
+var guess_panel: GuessPanel
+var _photo_busy: bool = false
 
 
 func _ready() -> void:
@@ -63,6 +67,16 @@ func _ready() -> void:
 	story = StoryPanel.new()
 	add_child(story)
 	GameState.night_changed.connect(_on_night_changed)
+	album = AlbumPanel.new()
+	add_child(album)
+	achievements_panel = AchievementsPanel.new()
+	add_child(achievements_panel)
+	guess_panel = GuessPanel.new()
+	add_child(guess_panel)
+	pause_menu.album_requested.connect(open_album)
+	pause_menu.achievements_requested.connect(open_achievements)
+	pause_menu.guess_requested.connect(open_guess)
+	GameState.achievement_unlocked.connect(_on_achievement)
 	AudioManager.enter_world(gen.biome_at(player.global_position), GameState.is_night())
 	if not GameState.intro_seen:
 		_show_intro.call_deferred()
@@ -125,6 +139,81 @@ func _on_zoo_record_requested(id: String) -> void:
 func open_map() -> void:
 	_store_and_save()
 	map_screen.open()
+
+
+func open_album() -> void:
+	_store_and_save()
+	album.open()
+
+
+func open_achievements() -> void:
+	_store_and_save()
+	achievements_panel.open()
+
+
+func open_guess() -> void:
+	_store_and_save()
+	guess_panel.open()
+
+
+func _on_achievement(id: String) -> void:
+	var a: Dictionary = AchievementDB.find(id)
+	if a.is_empty():
+		return
+	hud.show_toast("Досягнення: %s" % a["title"], 3.5)
+	AudioManager.play_ui(&"save")
+
+
+## Фото (F): приховує HUD, знімає кадр, зберігає в user://photos і додає до альбому звірів у кадрі.
+func take_photo() -> void:
+	if _photo_busy or not player.input_enabled or get_tree().paused:
+		return
+	_photo_busy = true
+	hud.visible = false
+	await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	var img: Image = null
+	if DisplayServer.get_name() != "headless":
+		img = get_viewport().get_texture().get_image()
+	hud.visible = true
+	register_photo(img)
+	_photo_busy = false
+
+
+## Зберігає знімок і повертає імена звірів у кадрі (img може бути null, напр. у headless).
+func register_photo(img: Image) -> Array[String]:
+	var file_name: String = SaveManager.save_photo(img)
+	var ids: Array[String] = animals_in_frame()
+	GameState.register_photo(ids, file_name)
+	AudioManager.play_ui(&"photo")
+	var flash: ColorRect = ColorRect.new()
+	flash.color = Color(1, 1, 1, 0.8)
+	flash.set_anchors_preset(Control.PRESET_FULL_RECT)
+	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hud.add_child(flash)
+	var tw: Tween = create_tween()
+	tw.tween_property(flash, "color:a", 0.0, 0.3)
+	tw.tween_callback(flash.queue_free)
+	var names: PackedStringArray = PackedStringArray()
+	for id: String in ids:
+		names.append(String(GameState.get_record(id).get("name", "")))
+	hud.show_toast("Фото збережено" + (": " + ", ".join(names) if not names.is_empty() else ""), 3.0)
+	return ids
+
+
+## Відкриті активні звірі, що потрапляють у кадр камери поруч із гравцем.
+func animals_in_frame() -> Array[String]:
+	var ids: Array[String] = []
+	var frame: Rect2 = get_viewport().get_visible_rect().grow(-48.0)
+	var to_screen: Transform2D = get_viewport().get_canvas_transform()
+	for id: String in animals:
+		var a: Animal = animals[id]
+		if not a.is_active() or not a.is_awake():
+			continue
+		var pos: Vector2 = a.creature_global_position()
+		if frame.has_point(to_screen * pos) and pos.distance_to(player.global_position) < 520.0:
+			ids.append(id)
+	return ids
 
 
 func open_zoo() -> void:
@@ -235,6 +324,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"open_zoo"):
 		get_viewport().set_input_as_handled()
 		open_zoo()
+	elif event is InputEventKey and event.pressed and not event.echo and _panel_key((event as InputEventKey).physical_keycode):
+		get_viewport().set_input_as_handled()
 	elif event is InputEventKey and event.pressed and not event.echo and (event as InputEventKey).physical_keycode == KEY_N:
 		get_viewport().set_input_as_handled()
 		_wait_for_next_phase()
@@ -242,6 +333,22 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		_store_and_save()
 		pause_menu.open()
+
+
+## Гарячі клавіші додаткових вікон: F — фото, B — альбом, J — досягнення, G — вгадай голос.
+func _panel_key(code: Key) -> bool:
+	match code:
+		KEY_F:
+			take_photo()
+		KEY_B:
+			open_album()
+		KEY_J:
+			open_achievements()
+		KEY_G:
+			open_guess()
+		_:
+			return false
+	return true
 
 
 ## Перемотка часу до світанку/сутінків із коротким затемненням.

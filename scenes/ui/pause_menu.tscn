@@ -62,6 +62,24 @@ custom_minimum_size = Vector2(0, 46)
 layout_mode = 2
 text = "Мапа"
 
+[node name="AlbumButton" type="Button" parent="Center/Panel/Margin/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+text = "Альбом і фото"
+
+[node name="AchievementsButton" type="Button" parent="Center/Panel/Margin/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+text = "Досягнення"
+
+[node name="GuessButton" type="Button" parent="Center/Panel/Margin/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+text = "Вгадай голос"
+
 [node name="SettingsButton" type="Button" parent="Center/Panel/Margin/VBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 46)

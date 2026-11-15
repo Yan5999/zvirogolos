@@ -29,6 +29,7 @@ func _ready() -> void:
 		set_process(true)
 		GameState.animal_discovered.connect(_on_discovered)
 		GameState.animal_updated.connect(_on_updated)
+		GameState.achievement_unlocked.connect(func(id: String) -> void: unlock("ACH_" + id.to_upper()))
 		print("SteamManager: Steam ініціалізовано")
 	else:
 		push_warning("SteamManager: не вдалося ініціалізувати Steam: %s" % str(res))

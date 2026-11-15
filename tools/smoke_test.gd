@@ -312,6 +312,66 @@ func _stage6_checks(world: World) -> void:
 	wx.force_rain(false)
 	check(Synth.build_event(&"thunder").get_length() > 3.0, "thunder sound")
 	AudioManager.music.set_rain(0.0)
+	# Звірі й погода, досягнення, фото й альбом, мінігра.
+	check(get_tree().get_nodes_in_group(&"animals").size() == GameState.total(), "all animals in group")
+	check(Weather.wet_level == 0.0, "no rain level after rain reset")
+	wx.force_rain(true)
+	world.player._biome = WorldGen.Biome.LAKE
+	wx.tick(4.0)
+	check(Weather.wet_level > 0.99, "static wet level during rain")
+	wx.force_rain(false)
+	wx.tick(4.0)
+	check(Weather.wet_level == 0.0, "wet level drops after rain")
+	check(GameState.achievements.has("storm"), "storm achievement from lightning")
+	for i: int in 4:
+		var sid: String = GameState.spots[i]["id"]
+		GameState.discover(sid)
+		check(GameState.set_voice(sid, Synth.build_step(0, i % 2)), "voice set %d" % i)
+	check(GameState.achievements.has("first_find") and GameState.achievements.has("first_voice"), "progress achievements")
+	var fake: Image = Image.create(320, 180, false, Image.FORMAT_RGB8)
+	fake.fill(Color(0.3, 0.6, 0.4))
+	var photo_name: String = SaveManager.save_photo(fake)
+	check(not photo_name.is_empty() and SaveManager.load_photo(photo_name) != null, "photo saved and loaded")
+	var first_id: String = GameState.spots[0]["id"]
+	var ids: Array[String] = [first_id]
+	GameState.register_photo(ids, photo_name)
+	check(GameState.get_record(first_id).get("photo", "") == photo_name, "photo attached to animal")
+	check(GameState.achievements.has("first_photo") and GameState.achievements.has("photo_animal"), "photo achievements")
+	check(world.register_photo(null).size() >= 0 and int(GameState.stats["photos"]) == 2, "register_photo counts")
+	var sleeper: Animal = world.animals[first_id]
+	var old_time: SpeciesData.ActiveTime = sleeper.species.active_time
+	sleeper.species.active_time = SpeciesData.ActiveTime.DAY
+	GameState.time_of_day = 0.0
+	sleeper._update_sleep_indicator()
+	check(sleeper._zzz.visible, "day animal shows z Z at night")
+	GameState.time_of_day = 0.5
+	sleeper._update_sleep_indicator()
+	check(not sleeper._zzz.visible, "no z Z by day")
+	sleeper.species.active_time = old_time
+	sleeper.startle()
+	check(true, "startle does not crash")
+	world.album.open()
+	check(world.album.is_open() and get_tree().paused and world.album.card_count() == GameState.total(), "album opens with all cards")
+	world.album.close()
+	world.achievements_panel.open()
+	check(world.achievements_panel.row_count() == AchievementDB.ALL.size() and world.achievements_panel.unlocked_count() >= 4, "achievements panel rows")
+	world.achievements_panel.close()
+	check(not get_tree().paused, "panels unpause")
+	var gp: GuessPanel = world.guess_panel
+	gp.open()
+	check(gp.can_play() and gp.correct_index >= 0, "guess game starts with voices")
+	gp.answer(gp.correct_index)
+	gp.new_round()
+	gp.answer(gp.correct_index)
+	gp.new_round()
+	gp.answer(gp.correct_index)
+	check(gp.streak == 3 and GameState.achievements.has("guess_3"), "guess streak achievement")
+	gp.new_round()
+	gp.answer((gp.correct_index + 1) % 2 if gp.correct_index < 2 else 0)
+	check(gp.streak == 0 and int(GameState.stats["guess_best"]) == 3, "wrong guess resets streak, best kept")
+	gp.close()
+	GameState.save()
+	check(int(SaveManager.load_game().get("stats", {}).get("photos", 0)) == 2 and (SaveManager.load_game().get("achievements", {}) as Dictionary).has("guess_3"), "stats and achievements persisted")
 	# Стабильность: 600 кадров бега по карте без ошибок.
 	var t0: int = Time.get_ticks_msec()
 	world.player.global_position = GameState.world_gen.start_position()

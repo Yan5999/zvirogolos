@@ -53,6 +53,7 @@ func _ready() -> void:
 	await _shot("09_map")
 	world.map_screen.close()
 	await _gallery(world)
+	await _new_systems(world)
 	world.pause_menu.open()
 	world.pause_menu.settings.open()
 	await _frames(5)
@@ -99,3 +100,53 @@ func _frames(n: int) -> void:
 func _shot(shot_name: String) -> void:
 	await RenderingServer.frame_post_draw
 	get_viewport().get_texture().get_image().save_png(_dir + shot_name + ".png")
+
+
+## Фото, альбом, досягнення, мінігра, дощ, ніч.
+func _new_systems(world: World) -> void:
+	var f2: Dictionary = _spot_in_biome(WorldGen.Biome.FOREST)
+	world.player.global_position = f2["position"] + Vector2(0, 25)
+	await get_tree().create_timer(1.3).timeout
+	world.record_dialog.close(false)
+	for i: int in 4:
+		var sid: String = GameState.spots[i]["id"]
+		GameState.discover(sid)
+		GameState.set_voice(sid, Synth.build_step(i % 4, 0))
+	GameState.time_of_day = 0.5
+	await _frames(30)
+	world.take_photo()
+	while world._photo_busy:
+		await _frames(1)
+	await _frames(25)
+	world.open_album()
+	await _frames(8)
+	await _shot("11_album")
+	world.album.close()
+	world.open_achievements()
+	await _frames(5)
+	await _shot("12_achievements")
+	world.achievements_panel.close()
+	world.open_guess()
+	await _frames(5)
+	await _shot("13_guess")
+	world.guess_panel.answer(world.guess_panel.correct_index)
+	await _frames(5)
+	await _shot("13b_guess_answered")
+	world.guess_panel.close()
+	world.pause_menu.open()
+	await _frames(5)
+	await _shot("14_pause")
+	world.pause_menu.close()
+	world.player.global_position = f2["position"] + Vector2(60, 60)
+	world.weather.force_rain(true)
+	world.weather.tick(4.0)
+	await _frames(70)
+	await _shot("15_rain")
+	world.weather.lightning()
+	await _frames(6)
+	await _shot("15b_lightning")
+	world.weather.force_rain(false)
+	world.weather.tick(4.0)
+	GameState.time_of_day = 0.0
+	await get_tree().create_timer(2.5).timeout
+	await _shot("16_night")

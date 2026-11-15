@@ -89,6 +89,9 @@ func _ready() -> void:
 ## Останавливаем всё при выходе, чтобы AudioServer не держал playback'и (утечки при quit).
 func _exit_tree() -> void:
 	stop_all()
+	# Аудіосервер звільняє зупинені відтворення на наступному такті мікшера; без короткої паузи
+	# вони лишаються в пам'яті при виході (попередження ObjectDB про витік).
+	OS.delay_msec(200)
 
 
 func stop_all() -> void:
@@ -403,6 +406,7 @@ func _build_ui_sounds() -> void:
 	_ui_sounds[&"open"] = _synth([523.25, 783.99], 0.07, 0.3)
 	_ui_sounds[&"close"] = _synth([783.99, 523.25], 0.06, 0.25)
 	_ui_sounds[&"discover"] = _synth([523.25, 659.25, 783.99, 1046.5, 1318.5], 0.1, 0.35)
+	_ui_sounds[&"photo"] = _synth([1760.0, 1318.5], 0.03, 0.3)
 	_ui_sounds[&"save"] = _synth([659.25, 987.77], 0.09, 0.3)
 	_ui_sounds[&"record"] = _synth([880.0], 0.08, 0.3)
 	_ui_sounds[&"delete"] = _synth([392.0, 261.63], 0.1, 0.3)

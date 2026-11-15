@@ -27,6 +27,9 @@ var _wander_wait: float = 0.0
 var _moving: bool = false
 var _player_near: bool = false
 var _last_voice_ms: int = -1000000
+var _jump: float = 0.0
+var _zzz: Label
+var _zzz_base: Vector2 = Vector2.ZERO
 
 @onready var hideout: Node2D = $Hideout
 @onready var creature: Node2D = $Creature
@@ -40,6 +43,14 @@ var _last_voice_ms: int = -1000000
 
 
 func _ready() -> void:
+	add_to_group(&"animals")
+	_zzz = Label.new()
+	_zzz.text = "z Z"
+	_zzz.add_theme_font_size_override("font_size", 18)
+	_zzz.modulate = Color(0.82, 0.88, 1.0, 0.9)
+	_zzz.z_index = 20
+	_zzz.visible = false
+	add_child(_zzz)
 	hideout.draw.connect(_on_hideout_draw)
 	body.draw.connect(_on_body_draw)
 	discover_area.body_entered.connect(_on_discover_body_entered)
@@ -50,7 +61,9 @@ func _ready() -> void:
 	screen_notifier.screen_entered.connect(set_process.bind(true))
 	screen_notifier.screen_exited.connect(set_process.bind(false))
 	set_process(false)
-	GameState.night_changed.connect(func(_n: bool) -> void: _update_label())
+	GameState.night_changed.connect(func(_n: bool) -> void:
+		_update_label()
+		_update_sleep_indicator())
 
 
 func setup(id: String, sp: SpeciesData, record: Dictionary, player: Player) -> void:
@@ -71,6 +84,7 @@ func setup(id: String, sp: SpeciesData, record: Dictionary, player: Player) -> v
 		_update_label()
 	hideout.queue_redraw()
 	body.queue_redraw()
+	_update_sleep_indicator()
 
 
 ## Обновить имя/данные после изменения записи (переименование и т.п.).
@@ -101,6 +115,7 @@ func _set_hidden() -> void:
 	hideout.modulate.a = 1.0
 	display_name = ""
 	_update_label()
+	_update_sleep_indicator()
 	# Если игрок стоит прямо в зоне — не открываем мгновенно повторно, ждём выхода/входа.
 
 
@@ -135,6 +150,7 @@ func _on_reveal_done() -> void:
 	_wander_target = creature.position
 	_wander_wait = randf_range(1.0, 2.5)
 	_update_label()
+	_update_sleep_indicator()
 	reveal_finished.emit(self)
 
 
@@ -155,6 +171,8 @@ func _on_discover_body_entered(b: Node2D) -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
+	if _zzz.visible:
+		_zzz.position = _zzz_base + Vector2(0.0, sin(_time * 2.0) * 3.0)
 	match state:
 		State.HIDDEN:
 			_rustle()
@@ -233,6 +251,9 @@ func _wander(delta: float) -> void:
 	_moving = false
 	if not species.wanders:
 		return
+	# Злива: звір ховається біля свого укриття й нікуди не йде.
+	if Weather.wet_level > 0.5:
+		_wander_target = Vector2(10.0, 6.0)
 	if _wander_wait > 0.0:
 		_wander_wait -= delta
 		return
@@ -263,6 +284,29 @@ func _animate_body() -> void:
 	else:
 		body.position.y = 0.0
 		body.scale = Vector2(_facing, 1.0 + sin(_time * 2.4) * 0.035)
+	body.position.y -= _jump
+
+
+## Переляк від грому: два швидкі підстрибування (лише активні, відкриті звірі).
+func startle() -> void:
+	if state != State.ACTIVE or not is_awake():
+		return
+	var tw: Tween = create_tween()
+	tw.tween_property(self, "_jump", 16.0, 0.09).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_property(self, "_jump", 0.0, 0.12).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.tween_property(self, "_jump", 9.0, 0.07).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_property(self, "_jump", 0.0, 0.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
+
+## «z Z» над звіром, що спить (у своє неактивний для виду час доби).
+func _update_sleep_indicator() -> void:
+	var sleeping: bool = species != null and not is_awake() and state != State.REVEALING
+	_zzz.visible = sleeping
+	if sleeping:
+		if state == State.ACTIVE:
+			_zzz_base = creature.position + Vector2(-8.0, -species.body_radii.y * 2.0 - 24.0)
+		else:
+			_zzz_base = Vector2(-10.0, -48.0)
 
 
 func _update_label() -> void:
