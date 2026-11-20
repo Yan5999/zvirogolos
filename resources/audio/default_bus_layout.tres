@@ -2,10 +2,7 @@
 
 [sub_resource type="AudioEffectCapture" id="AudioEffectCapture_mic"]
 resource_name = "Capture"
-buffer_length = 0.25
-
-[sub_resource type="AudioEffectRecord" id="AudioEffectRecord_mic"]
-resource_name = "Record"
+buffer_length = 0.5
 
 [resource]
 bus/1/name = &"Voices"
@@ -28,5 +25,3 @@ bus/3/volume_db = 0.0
 bus/3/send = &"Master"
 bus/3/effect/0/effect = SubResource("AudioEffectCapture_mic")
 bus/3/effect/0/enabled = true
-bus/3/effect/1/effect = SubResource("AudioEffectRecord_mic")
-bus/3/effect/1/enabled = true

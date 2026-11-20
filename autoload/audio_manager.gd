@@ -24,7 +24,6 @@ const VOICE_ATTENUATION: float = 1.6
 const VOICE_PANNING: float = 1.2
 const SYNTH_RATE: int = 22050
 
-var _record: AudioEffectRecord
 var _capture: AudioEffectCapture
 var _mic_player: AudioStreamPlayer
 var _preview_player: AudioStreamPlayer
@@ -35,6 +34,10 @@ var _voice_players: Array[AudioStreamPlayer2D] = []
 var _voice_sources: Array[Node2D] = []
 var _level: float = 0.0
 var _mic_frames: int = 0
+## Запись собираем сами из буфера AudioEffectCapture (тот же, что даёт индикатор уровня).
+## AudioEffectRecord в web-экспорте не пишет звук, поэтому на нём не полагаемся.
+var _rec_active: bool = false
+var _rec_buf: PackedVector2Array = PackedVector2Array()
 var music: MusicDirector
 var _step_players: Array[AudioStreamPlayer] = []
 var _step_next: int = 0
@@ -97,8 +100,7 @@ func _exit_tree() -> void:
 func stop_all() -> void:
 	if music:
 		music.stop_all()
-	if is_recording():
-		_record.set_recording_active(false)
+	_rec_active = false
 	for child: Node in get_children():
 		if child is AudioStreamPlayer:
 			(child as AudioStreamPlayer).stop()
@@ -134,16 +136,10 @@ func _ensure_buses() -> void:
 		var fx: AudioEffect = AudioServer.get_bus_effect(rec, e)
 		if fx is AudioEffectCapture:
 			_capture = fx
-		elif fx is AudioEffectRecord:
-			_record = fx
 	if _capture == null:
 		_capture = AudioEffectCapture.new()
-		_capture.buffer_length = 0.25
+		_capture.buffer_length = 0.5
 		AudioServer.add_bus_effect(rec, _capture, 0)
-	if _record == null:
-		_record = AudioEffectRecord.new()
-		AudioServer.add_bus_effect(rec, _record)
-	_record.format = AudioStreamWAV.FORMAT_16_BITS
 
 
 # --- Громкость ----------------------------------------------------------------
@@ -321,29 +317,32 @@ func open_mic() -> void:
 
 func close_mic() -> void:
 	music.set_duck(false)
-	if is_recording():
-		_record.set_recording_active(false)
+	_rec_active = false
+	_rec_buf = PackedVector2Array()
 	_mic_player.stop()
 	_level = 0.0
 
 
 func start_recording() -> void:
 	open_mic()
-	_record.set_recording_active(true)
+	_rec_buf = PackedVector2Array()
+	_rec_active = true
 
 
 func stop_recording() -> AudioStreamWAV:
-	if not is_recording():
+	if not _rec_active:
 		return null
-	_record.set_recording_active(false)
-	return _record.get_recording()
+	poll_mic_level()  # забираем остаток буфера до остановки
+	_rec_active = false
+	return _make_take()
 
 
 func is_recording() -> bool:
-	return _record != null and _record.is_recording_active()
+	return _rec_active
 
 
 ## Пиковый уровень микрофона 0..1 (со спадом). Вызывать раз в кадр, пока открыт микрофон.
+## Во время записи также копит кадры в буфер записи.
 func poll_mic_level() -> float:
 	_level *= 0.86
 	if _capture == null:
@@ -356,7 +355,26 @@ func poll_mic_level() -> float:
 		for f: Vector2 in buf:
 			pk = maxf(pk, maxf(absf(f.x), absf(f.y)))
 		_level = maxf(_level, pk)
+		if _rec_active:
+			_rec_buf.append_array(buf)
 	return _level
+
+
+## Собирает 16-бит стерео WAV из накопленных кадров (VoiceProcessing понимает стерео).
+func _make_take() -> AudioStreamWAV:
+	var bytes: PackedByteArray = PackedByteArray()
+	bytes.resize(_rec_buf.size() * 4)
+	for i: int in _rec_buf.size():
+		var f: Vector2 = _rec_buf[i]
+		bytes.encode_s16(i * 4, int(clampf(f.x, -1.0, 1.0) * 32767.0))
+		bytes.encode_s16(i * 4 + 2, int(clampf(f.y, -1.0, 1.0) * 32767.0))
+	_rec_buf = PackedVector2Array()
+	var wav: AudioStreamWAV = AudioStreamWAV.new()
+	wav.format = AudioStreamWAV.FORMAT_16_BITS
+	wav.mix_rate = int(AudioServer.get_mix_rate())
+	wav.stereo = true
+	wav.data = bytes
+	return wav
 
 
 ## Сколько кадров пришло с микрофона с момента open_mic(). 0 — поток не идёт.
